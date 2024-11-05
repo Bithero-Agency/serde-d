@@ -138,7 +138,7 @@ void serialize(T, S : Serializer)(T[] array, S ser) if (!isSomeString!(T[])) {
 }
 
 /// Serializes an libphobos double-linked list
-void serialize(T, S : Serializer)(DList!T list, S ser) if (!isSomeString!(T[])) {
+void serialize(T, S : Serializer)(DList!T list, S ser) {
     auto s = ser.start_seq!T();
     foreach (ref el; list) {
         s.write_element(el);
@@ -146,7 +146,7 @@ void serialize(T, S : Serializer)(DList!T list, S ser) if (!isSomeString!(T[])) 
     s.end();
 }
 /// Serializes an libphobos single-linked list
-void serialize(T, S : Serializer)(SList!T list, S ser) if (!isSomeString!(T[])) {
+void serialize(T, S : Serializer)(SList!T list, S ser) {
     auto s = ser.start_seq!T();
     foreach (ref el; list) {
         s.write_element(el);
@@ -195,6 +195,8 @@ private enum isSpecialStructOrClass(T) = (
     isInstanceOf!(StdTuple, T)
     || isInputRange!T
     || is(T == RawValue)
+    || isInstanceOf!(DList, T)
+    || isInstanceOf!(SList, T)
 );
 
 /// Serializes structs and classes that are not already handled in special cases of `serialize`,
