@@ -7,7 +7,7 @@
 	"license": "AGPL-3.0-or-later",
 	"name": "yaml",
 	"dependencies": {
-		"serde": {
+		"serde-d": {
 			"path": "../.."
 		}
 	}

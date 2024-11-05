@@ -8,7 +8,7 @@
 	"name": "json",
 	"targetType": "library",
 	"dependencies": {
-		"serde": {
+		"serde-d": {
 			"path": "../.."
 		}
 	}

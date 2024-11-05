@@ -7,13 +7,13 @@
 	"license": "AGPL-3.0-or-later",
 	"name": "test",
 	"dependencies": {
-		"serde": {
+		"serde-d": {
 			"path": ".."
 		},
-		"serde:json": {
+		"serde-d:json": {
 			"path": ".."
 		},
-		"serde:yaml": {
+		"serde-d:yaml": {
 			"path": ".."
 		}
 	}

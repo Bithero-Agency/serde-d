@@ -13,5 +13,5 @@
 	],
 	"description": "A minimal D application.",
 	"license": "AGPL-3.0-or-later",
-	"name": "serde"
+	"name": "serde-d"
 }
