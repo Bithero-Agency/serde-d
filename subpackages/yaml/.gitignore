@@ -1,0 +1,16 @@
+.dub
+docs.json
+__dummy.html
+docs/
+/yaml
+*.so
+*.dylib
+*.dll
+*.a
+*.lib
+yaml-test-*
+*.exe
+*.pdb
+*.o
+*.obj
+*.lst

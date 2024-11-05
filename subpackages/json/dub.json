@@ -1,0 +1,15 @@
+{
+	"authors": [
+		"Mai Lapyst"
+	],
+	"copyright": "Copyright © 2024, Mai Lapyst",
+	"description": "A minimal D application.",
+	"license": "AGPL-3.0-or-later",
+	"name": "json",
+	"targetType": "library",
+	"dependencies": {
+		"serde": {
+			"path": "../.."
+		}
+	}
+}

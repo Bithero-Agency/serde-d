@@ -1,0 +1,17 @@
+{
+	"authors": [
+		"Mai Lapyst"
+	],
+	"copyright": "Copyright © 2024, Mai Lapyst",
+	"dependencies": {
+		"ninox-d_std:callable": "~>1.7.7",
+		"ninox-d_std:traits": "~>1.7.7"
+	},
+	"subPackages": [
+		"./subpackages/json",
+		"./subpackages/yaml"
+	],
+	"description": "A minimal D application.",
+	"license": "AGPL-3.0-or-later",
+	"name": "serde"
+}

@@ -1,0 +1,16 @@
+.dub
+docs.json
+__dummy.html
+docs/
+/serde
+*.so
+*.dylib
+*.dll
+*.a
+*.lib
+serde-test-*
+*.exe
+*.pdb
+*.o
+*.obj
+*.lst
