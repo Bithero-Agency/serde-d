@@ -52,15 +52,9 @@ class JsonDeserializer : Deserializer {
         this.buffer = ReadBuffer(source);
     }
 
+    pragma(inline)
     private void skip_ws() {
-        dchar c;
-        while (true) {
-            c = this.buffer.front;
-            if (c == ' ' || c == '\n' || c == '\r' || c == '\t')
-                this.buffer.popFront;
-            else
-                break;
-        }
+        this.buffer.skipWhitespace;
     }
 
     pragma(inline)

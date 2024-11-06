@@ -133,6 +133,17 @@ if (isInputRange!R)
     return r;
 }
 
+void skipWhitespace(R)(auto ref R inp) {
+    dchar c;
+    while (true) {
+        c = inp.front;
+        if (c == ' ' || c == '\n' || c == '\r' || c == '\t')
+            inp.popFront;
+        else
+            break;
+    }
+}
+
 struct ReadBuffer {
 public:
     alias Source = Callable!(size_t, RefT!(char[]), size_t);
