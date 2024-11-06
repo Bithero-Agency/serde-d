@@ -27,7 +27,7 @@ module serde.common;
 
 import std.conv : to;
 import std.range : empty, front, popFront, ElementType, isInputRange;
-import std.traits : isSomeString, isIntegral, isFloatingPoint, EnumMembers;
+import std.traits : isSomeString, isIntegral, isFloatingPoint, EnumMembers, OriginalType;
 import std.meta : staticMap;
 
 import ninox.std.callable;
@@ -242,7 +242,10 @@ if (is(T == enum))
             }
         }
     }
-    throw new Exception("Could not lookup enum value " ~ value.to!string ~ " for type " ~ T.stringof);
+
+    // Enums with an AA as backing type have some problems when trying to convert them to an string.
+    // So, we just cast anything explicitly to the original type, so that we can actually get what we're looking for.
+    throw new Exception("Could not lookup enum value " ~ (cast(OriginalType!T) value).to!string ~ " for type " ~ T.stringof);
 }
 
 string getEnumKeyName(T)(ref T value, ulong index) if (is(T == enum)) {

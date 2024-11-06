@@ -178,7 +178,7 @@ void serialize(R, S : Serializer)(auto ref R range, S ser) if (isInputRange!R &&
 }
 
 /// Serializes an associative array
-void serialize(AA, S : Serializer)(auto ref AA aa, S ser) if (isAssociativeArray!AA) {
+void serialize(AA, S : Serializer)(auto ref AA aa, S ser) if (isAssociativeArray!AA && !is(AA == enum)) {
     alias K = KeyType!AA;
     alias V = ValueType!AA;
     auto m = ser.start_map!(K, V)(aa.length);
