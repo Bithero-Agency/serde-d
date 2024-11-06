@@ -25,6 +25,9 @@
  */
 module serde.common;
 
+import std.conv : to;
+import std.range : empty, front, popFront, ElementType, isInputRange;
+
 /// Basic escape function that does slash escaption like in JSON strings
 void backslashEscape(alias Sink)(const(ubyte)[] chars) {
     size_t tmp = 0;
@@ -71,4 +74,58 @@ void backslashEscape(alias Sink)(const(ubyte)[] chars) {
         }
     }
     Sink(chars[tmp .. chars.length]);
+}
+
+string backslashUnescape(R)(auto ref R inp, char delimiter)
+if (isInputRange!R)
+{
+    string r;
+    ElementType!R c;
+    while (!inp.empty()) {
+        c = inp.front();
+        if (c == delimiter) {
+            break;
+        } else if (c == '\\') {
+            inp.popFront();
+            c = inp.front(); inp.popFront();
+            switch (c) {
+                case '"':
+                case '\\': {
+                    r ~= c;
+                    continue;
+                }
+
+                case 'b': { r ~= '\b'; continue; }
+                case 'f': { r ~= '\f'; continue; }
+                case 'n': { r ~= '\n'; continue; }
+                case 'r': { r ~= '\r'; continue; }
+                case 't': { r ~= '\t'; continue; }
+                case '0': { r ~= '\0'; continue; }
+
+                case 'u': {
+                    c = inp.front(); inp.popFront();
+                    if (c != '0') throw new Exception("Unescape error: expected '0' after '\\u'");
+                    c = inp.front(); inp.popFront();
+                    if (c != '0') throw new Exception("Unescape error: expected '0' after '\\u0'");
+
+                    ubyte[2] spl;
+                    c = inp.front(); inp.popFront();
+                    spl[0] = cast(ubyte)(c < 'A' ? c - '0' : c - 'A' + 10);
+                    c = inp.front(); inp.popFront();
+                    spl[1] = cast(ubyte)(c < 'A' ? c - '0' : c - 'A' + 10);
+
+                    c = cast(char)((spl[0] << 4) | spl[1]);
+                    r ~= c;
+                    continue;
+                }
+
+                default:
+                    throw new Exception("Invalid escape sequence: \\" ~ c.to!string);
+            }
+        } else {
+            inp.popFront();
+            r ~= c;
+        }
+    }
+    return r;
 }
