@@ -35,8 +35,10 @@ struct Serde {
     /// Checks if the given element `T` has the `Serde.UseUfcs` attribute present.
     enum isUfcs(alias T) = hasUDA!(T, UseUfcs);
 
-    /// Attribute to mark an member as to be skipped in both
-    /// serialization and deserialization.
+    /// Attribute to mark an member as to be skipped in both (de)serialization.
+    /// 
+    /// Can also be added to an type (class or struct) to skip the whole
+    /// type for (de)serialization
     enum Skip;
 
     /// Checks if the given element `T` has the `Serde.Skip` attribute present.
