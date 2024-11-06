@@ -42,6 +42,8 @@ import serde.error;
 abstract class Deserializer {
     void read_basic(T)(ref T value) if (isScalarType!T);
 
+    void read_string(T)(ref T str, D de) if (isSomeString!T);
+
     void read_ignore();
 
     interface SeqAccess {
