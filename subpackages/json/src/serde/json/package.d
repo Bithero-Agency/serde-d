@@ -26,3 +26,4 @@
 module serde.json;
 
 public import serde.json.ser;
+public import serde.json.de;
