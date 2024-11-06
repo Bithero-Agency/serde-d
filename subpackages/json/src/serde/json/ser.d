@@ -88,6 +88,11 @@ class JsonSerializer : Serializer {
         write(cast(string) v.value);
     }
 
+    void write_enum(T)(ref T value) if (is(T == enum)) {
+        import serde.common;
+        write_string( value.getEnumKeyName );
+    }
+
     class Seq : Serializer.Seq {
         bool atStart = true;
         void write_element(T)(T e) {
