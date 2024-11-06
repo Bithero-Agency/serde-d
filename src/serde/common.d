@@ -28,6 +28,9 @@ module serde.common;
 import std.conv : to;
 import std.range : empty, front, popFront, ElementType, isInputRange;
 
+import ninox.std.callable;
+import ninox.std.traits : RefT;
+
 /// Basic escape function that does slash escaption like in JSON strings
 void backslashEscape(alias Sink)(const(ubyte)[] chars) {
     size_t tmp = 0;
@@ -128,4 +131,80 @@ if (isInputRange!R)
         }
     }
     return r;
+}
+
+struct ReadBuffer {
+public:
+    alias Source = Callable!(size_t, RefT!(char[]), size_t);
+protected:
+    enum BufferSize = 4069 * 4;
+
+    Source source;
+    size_t len, pos = 0;
+    char[] data = void;
+
+public:
+    this(char[] data) {
+        this.data = data;
+        this.len = data.length;
+    }
+
+    this(Source source) {
+        this.source = source;
+    }
+    this(Source.FnT source) {
+        this.source = source;
+    }
+    this(Source.DgT source) {
+        this.source = source;
+    }
+
+    /// Fills up the internal buffer
+    private void fill(bool handleEOF = true) {
+        if (!this.source) {
+            if (handleEOF) throw new Exception("End of file reached");
+        }
+
+        this.len = this.source(this.data, BufferSize);
+        if (handleEOF && this.len < 1) {
+            throw new Exception("End of file reached");
+        }
+        this.pos = 0;
+    }
+
+    /// Checks if filling is needed and fills the buffer (only when the buffer is completly empty!)
+    pragma(inline) void fillIfNeeded(bool handleEOF = true) {
+        if (this.pos >= this.len) {
+            this.fill(handleEOF);
+        }
+    }
+
+    /// Checks if the parser is at the end
+    /// 
+    /// Returns: true if the parser is at the end; false otherwise
+    @property bool empty() {
+        this.fillIfNeeded(false);
+        return this.pos >= this.len;
+    }
+
+    /// Gets the current char in the buffer
+    /// 
+    /// Note: Fills the internal buffer if needed via `fillIfNeeded()`.
+    /// 
+    /// Returns: the char at the current position in the internal buffer
+    @property dchar front() {
+        this.fillIfNeeded();
+
+        import std.utf : decode;
+        size_t i = this.pos;
+        return decode(this.data, i);
+    }
+
+    void popFront() {
+        char c = this.data[this.pos];
+        if (c >= 0xF0) this.pos += 4;
+        else if (c >= 0xE0) this.pos += 3;
+        else if (c >= 0xC0) this.pos += 2;
+        else this.pos += 1;
+    }
 }
