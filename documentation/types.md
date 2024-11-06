@@ -16,6 +16,8 @@ The framework works by defining an internal data schema that all types are conve
 
 - An internal-use-only `RawValue` struct, which is used under the hood for the `Serde.Raw` attribute.
 
+- "enums", which are dlang's `enum` type.
+
 - A "sequence", which is an arbitary length list of values where the length might or might not be known beforehand. Typically all elements have the same type. However, this is implementation defined.
 
   By default these types are converted to it:

@@ -27,6 +27,8 @@ module serde.common;
 
 import std.conv : to;
 import std.range : empty, front, popFront, ElementType, isInputRange;
+import std.traits : isSomeString, isIntegral, isFloatingPoint, EnumMembers;
+import std.meta : staticMap;
 
 import ninox.std.callable;
 import ninox.std.traits : RefT;
@@ -218,4 +220,37 @@ public:
         else if (c >= 0xC0) this.pos += 2;
         else this.pos += 1;
     }
+}
+
+ulong getEnumKeyIndex(T)(ref T value)
+if (is(T == enum))
+{
+    static if (isIntegral!T || isSomeString!T) {
+        switch (value) {
+            static foreach (i, m; EnumMembers!T) {
+                case m: {
+                    return i;
+                }
+            }
+            default: break;
+        }
+    }
+    else {
+        foreach (i, m; EnumMembers!T) {
+            if (value == m) {
+                return i;
+            }
+        }
+    }
+    throw new Exception("Could not lookup enum value " ~ value.to!string ~ " for type " ~ T.stringof);
+}
+
+string getEnumKeyName(T)(ref T value, ulong index) if (is(T == enum)) {
+    enum getEnumName(alias E) = E.stringof;
+    static immutable names = [ staticMap!(getEnumName, EnumMembers!T) ];
+    return names[index];
+}
+
+pragma(inline) string getEnumKeyName(T)(ref T value) if (is(T == enum)) {
+    return getEnumKeyName(value, getEnumKeyIndex(value));
 }

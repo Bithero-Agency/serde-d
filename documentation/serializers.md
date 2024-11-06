@@ -8,6 +8,10 @@ Each of the types the framework defines is mapped to one specific set of methods
 
 - `RawValue`: They're written by the `write_raw(RawValue v)` method.
 
+- "enum" values: They're written by the `write_enum(T)(T value)` method.
+
+  There are helpers in `serde.common` to help with looking up the index (`getEnumKeyIndex`) and/or name (`getEnumKeyName`) of an enum instance value.
+
 - "sequences":
 
   They're written by first starting an sequence with `Seq start_seq(T)()` (or `Seq start_seq(T)(ulong length)` for if the length is known in advance). It is implementation defined what the serializer does with the `T` parameter, which represents the element type of the list. If you dont know the element type in advance, use `void` for `T`.

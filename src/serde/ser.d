@@ -41,14 +41,17 @@ import serde.attrs;
 
 abstract class Serializer {
 
-    /// Writes an "basic" scalar value. This is any type that satisfies `std.traits.isScalarType`.
-    void write_basic(T)(T value) if (isScalarType!T);
+    /// Writes an "basic" scalar value. This is any type that satisfies `std.traits.isScalarType`, but isnt an enum.
+    void write_basic(T)(T value) if (isScalarType!T && !is(T == enum));
 
-    /// Writes an "string" value. This is any type that satisfies `std.traits.isSomeString`.
-    void write_string(T)(scope T str) if (isSomeString!T);
+    /// Writes an "string" value. This is any type that satisfies `std.traits.isSomeString`, but isnt an enum.
+    void write_string(T)(scope T str) if (isSomeString!T && !is(T == enum));
 
     /// Writes an raw value; internally used to support the `Serde.Raw` annotation.
     void write_raw(RawValue v);
+
+    /// Writes an enum value.
+    void write_enum(T)(ref T value) if (is(T == enum));
 
     /// Sequences are arbitary length chains of elements.
     interface Seq {
@@ -114,18 +117,23 @@ package (serde) struct RawValue {
 }
 
 /// Serializes scalar types (bool, all integers, float, double, real, all char types)
-pragma(inline) void serialize(T, S : Serializer)(T value, S ser) if (isScalarType!T) {
+pragma(inline) void serialize(T, S : Serializer)(T value, S ser) if (isScalarType!T && !is(T == enum)) {
     ser.write_basic(value);
 }
 
 /// Serializes an string
-pragma(inline) void serialize(T, S : Serializer)(auto ref T str, S ser) if (isSomeString!T) {
+pragma(inline) void serialize(T, S : Serializer)(auto ref T str, S ser) if (isSomeString!T && !is(T == enum)) {
     ser.write_string(str);
 }
 
 /// Serializes an string raw
 pragma(inline) void serialize(S : Serializer)(ref RawValue value, S ser) {
     ser.write_raw(value);
+}
+
+/// Serializes an enum
+pragma(inline) void serialize(T, S : Serializer)(T value, S ser) if (is(T == enum)) {
+    ser.write_enum(value);
 }
 
 /// Serializes an array
@@ -204,6 +212,7 @@ private enum isSpecialStructOrClass(T) = (
 void serialize(T, S : Serializer)(auto ref T val, S ser)
 if (
     (is(T == struct) || is(T == class))
+    && !is(T == enum)
     && !isSpecialStructOrClass!T
     && !__traits(compiles, T.serialize)
     && !Serde.isUfcs!T
