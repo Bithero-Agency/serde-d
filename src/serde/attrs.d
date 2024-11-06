@@ -27,6 +27,7 @@
 module serde.attrs;
 
 import std.traits : hasUDA, getUDAs;
+import std.meta : Filter, staticMap;
 
 struct Serde {
     /// Attribute to denote that an `serialize` and `unserialize` function exists via ufcs.
@@ -120,6 +121,39 @@ struct Serde {
 
     /// Checks if the given element `T` has the `Serde.Getter` attribute present.
     enum isGetter(alias T) = hasUDA!(T, Getter);
+
+    /// Marks an member function to be used in deserialization. By default the name of the
+    /// function is used as-is.
+    enum Setter;
+
+    /// Checks if the given element `T` has the `Serde.Setter` attribute present.
+    enum isSetter(alias T) = hasUDA!(T, Setter);
+
+    /// Specifies an additional name to also use when deserializing.
+    static struct Alias { string name; }
+
+    /// Retrieves an AliasSeq of aliases in string-form from all `Serde.Alias`
+    /// attributes present on the given element `T`.
+    template getAliases(alias T)
+    {
+        enum isAliasValue(alias uda) = !is(uda == struct);
+        enum getAliasValue(alias uda) = uda.name;
+        alias getAliases = staticMap!(getAliasValue, Filter!(isAliasValue, getUDAs!(T, Alias)));
+    }
+
+    /// Marks an member as optional, makeing deserialization not fail if the member
+    /// was not deserialized.
+    enum Optional;
+
+    /// Checks if the given element `T` has the `Serde.Optional` attribute present.
+    enum isOptional(alias T) = hasUDA!(T, Optional);
+
+    /// Can be applied to structs or classes to make deserialization of them error
+    /// when encountering unknown fields.
+    enum DenyUnknownFields;
+
+    /// Checks if the given element `T` has the `Serde.DenyUnknownFields` attribute present.
+    enum shouldDenyUnknownFields(alias T) = hasUDA!(T, DenyUnknownFields);
 }
 
 /*
@@ -131,3 +165,7 @@ alias SerdeSkip = Serde.Skip;
 alias SerdeRename = Serde.Rename;
 alias SerdeRaw = Serde.Raw;
 alias SerdeGetter = Serde.Getter;
+alias SerdeSetter = Serde.Setter;
+alias SerdeAlias = Serde.Alias;
+alias SerdeOptional = Serde.Optional;
+alias SerdeDenyUnknownFields = Serde.DenyUnknownFields;
