@@ -176,6 +176,7 @@ public:
     private void fill(bool handleEOF = true) {
         if (!this.source) {
             if (handleEOF) throw new Exception("End of file reached");
+            return;
         }
 
         this.len = this.source(this.data, BufferSize);
