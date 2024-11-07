@@ -92,7 +92,8 @@ class JsonDeserializer : Deserializer {
     }
 
     void read_basic(T)(ref T value) if (isFloatingPoint!T) {
-        throw new Exception("Floats are unimplemented");
+        import std.conv : parse;
+        value = parse!T(this.buffer);
     }
 
     void read_basic(T)(ref T value) if (isScalarType!T && !is(T == bool) && !isFloatingPoint!T) {
