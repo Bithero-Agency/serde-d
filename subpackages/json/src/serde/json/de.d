@@ -195,6 +195,12 @@ class JsonDeserializer : Deserializer {
         }
     }
 
+    void read_enum(T)(ref T value) if (is(T == enum)) {
+        string val;
+        read_string(val);
+        value = getEnumValueByKey!T(val);
+    }
+
     class SeqAccess {
         bool atStart = true;
         Nullable!ulong size_hint() { return Nullable!ulong(); }
