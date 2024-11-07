@@ -135,6 +135,17 @@ if (isInputRange!R)
     return r;
 }
 
+void skipWsNoNl(R)(auto ref R inp) {
+    dchar c;
+    while (!inp.empty) {
+        c = inp.front;
+        if (c == ' ' || c == '\t')
+            inp.popFront;
+        else
+            break;
+    }
+}
+
 void skipWhitespace(R)(auto ref R inp) {
     dchar c;
     while (!inp.empty) {
