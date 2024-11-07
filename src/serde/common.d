@@ -137,7 +137,7 @@ if (isInputRange!R)
 
 void skipWhitespace(R)(auto ref R inp) {
     dchar c;
-    while (true) {
+    while (!inp.empty) {
         c = inp.front;
         if (c == ' ' || c == '\n' || c == '\r' || c == '\t')
             inp.popFront;
