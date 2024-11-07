@@ -40,9 +40,11 @@ import serde.attrs;
 import serde.error;
 
 abstract class Deserializer {
-    void read_basic(T)(ref T value) if (isScalarType!T);
+    void read_basic(T)(ref T value) if (isScalarType!T && !is(T == enum));
 
-    void read_string(T)(ref T str, D de) if (isSomeString!T);
+    void read_string(T)(ref T str, D de) if (isSomeString!T && !is(T == enum));
+
+    void read_enum(T)(ref T value) if (is(T == enum));
 
     void read_ignore();
 
@@ -66,18 +68,22 @@ abstract class Deserializer {
 package (serde) struct IgnoreValue {}
 
 /// Deserializes scalar types (bool, all integers, float, double, real, all char types)
-pragma(inline) void deserialize(T, D : Deserializer)(ref T value, D de) if (isScalarType!T) {
+pragma(inline) void deserialize(T, D : Deserializer)(ref T value, D de) if (isScalarType!T && !is(T == enum)) {
     de.read_basic!T(value);
 }
 
 /// Deserializes an string
-pragma(inline) void deserialize(T, D : Deserializer)(ref T str, D de) if (isSomeString!T) {
+pragma(inline) void deserialize(T, D : Deserializer)(ref T str, D de) if (isSomeString!T && !is(T == enum)) {
     de.read_string!T(str);
 }
 
 /// Ignores an value in deserialization
 pragma(inline) void deserialize(D : Deserializer)(auto ref IgnoreValue v, D de) {
     de.read_ignore();
+}
+
+pragma(inline) void deserialize(T, D : Deserializer)(ref T value, D de) if(is(T == enum)) {
+    de.read_enum(value);
 }
 
 /// Deserializes an array
@@ -128,7 +134,7 @@ void deserialize(T, D : Deserializer)(ref SList!T list, D de) {
 }
 
 /// Deserializes an associative array
-void deserialize(AA, D : Deserializer)(ref AA aa, D de) if (isAssociativeArray!AA) {
+void deserialize(AA, D : Deserializer)(ref AA aa, D de) if (isAssociativeArray!AA && !is(AA == enum)) {
     alias K = KeyType!AA;
     alias V = ValueType!AA;
 
@@ -171,6 +177,7 @@ private enum isSpecialStructOrClass(T) = (
 void deserialize(T, D : Deserializer)(ref T value, D de)
 if (
     (is(T == struct) || is(T == class))
+    && !is(T == enum)
     && !isSpecialStructOrClass!T
     && !__traits(compiles, T.deserialize)
     && !Serde.isUfcs!T

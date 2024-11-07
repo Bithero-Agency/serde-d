@@ -257,3 +257,23 @@ string getEnumKeyName(T)(ref T value, ulong index) if (is(T == enum)) {
 pragma(inline) string getEnumKeyName(T)(ref T value) if (is(T == enum)) {
     return getEnumKeyName(value, getEnumKeyIndex(value));
 }
+
+T getEnumValueByIndex(T)(ulong idx) if (is(T == enum)) {
+    switch (idx) {
+        static foreach (i, m; EnumMembers!T) {
+            case i: return m;
+        }
+        default: break;
+    }
+    throw new Exception("Invalid enum index " ~ idx ~ " for type " ~ T.stringof);
+}
+
+T getEnumValueByKey(T)(string name) if (is(T == enum)) {
+    switch (name) {
+        static foreach (m; EnumMembers!T) {
+            case m.stringof: return m;
+        }
+        default: break;
+    }
+    throw new Exception("Could not lookup enum key '" ~ name ~ "' for type " ~ T.stringof);
+}
