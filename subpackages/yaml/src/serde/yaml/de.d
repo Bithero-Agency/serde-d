@@ -851,6 +851,22 @@ class YamlDeserializer : Deserializer {
         }
     }
 
+    SeqAccess read_tuple(Elements...)() {
+        auto tag = this.read_tag();
+        // TODO: use the tag somehow...
+
+        if (this.buffer.front == '[') {
+            this.buffer.popFront();
+            auto access = new SeqAccess(ctx);
+            this.ctx = Context.FlowIn;
+            return access;
+        }
+        else {
+            // assume an block-style collection...
+            return new SeqAccess(ctx);
+        }
+    }
+
 }
 
 void fromYaml(T)(auto ref T value, string inp) {
