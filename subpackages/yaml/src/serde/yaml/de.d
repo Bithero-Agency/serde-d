@@ -1026,6 +1026,28 @@ class YamlDeserializer : Deserializer {
         }
     }
 
+    MapAccess read_struct(T)(ref T value) if (is(T == struct) || is(T == class)) {
+        auto tag = this.read_tag();
+        // TODO: use the tag somehow...
+
+        if (is(T == class)) {
+            if (this.buffer.startsWith("null")) {
+                this.buffer.popFrontExactly(4);
+                value = null;
+                return null;
+            }
+        }
+
+        if (this.buffer.front == '{') {
+            this.buffer.popFront();
+            return new MapAccess(ctx, false);
+        }
+        else {
+            // assume an block-style mapping...
+            return new MapAccess(ctx, true);
+        }
+    }
+
 }
 
 void fromYaml(T)(auto ref T value, string inp) {
