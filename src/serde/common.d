@@ -204,12 +204,20 @@ public:
         }
     }
 
-    /// Checks if the parser is at the end
+    /// Checks if the buffer is at the end
     /// 
-    /// Returns: true if the parser is at the end; false otherwise
+    /// Returns: true if the buffer is at the end; false otherwise
     @property bool empty() {
         this.fillIfNeeded(false);
         return this.pos >= this.len;
+    }
+
+    /// Checks if the buffer has more data beyond the current one.
+    /// 
+    /// Returns: true if the buffer is not empty after the next call to `popFront`.
+    @property bool hasNext() {
+        this.fillIfNeeded(false);
+        return (this.pos + 1) >= this.len;
     }
 
     /// Gets the current char in the buffer
@@ -231,6 +239,19 @@ public:
         else if (c >= 0xE0) this.pos += 3;
         else if (c >= 0xC0) this.pos += 2;
         else this.pos += 1;
+    }
+
+    /// Peeks n characters ahead.
+    /// 
+    /// Returns: the character at the n'th position from the current one in the internal buffer.
+    @property dchar peek(int off = 1) {
+        if ((this.pos + off) >= this.len) {
+            this.fill(true);
+        }
+
+        import std.utf : decode;
+        size_t i = this.pos + off;
+        return decode(this.data, i);
     }
 }
 
