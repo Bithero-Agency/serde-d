@@ -17,14 +17,21 @@
  */
 
 /**
- * Main module of the library
+ * Module to hold all yaml exception classes.
  * 
  * License:   $(HTTP https://www.gnu.org/licenses/agpl-3.0.html, AGPL 3.0).
  * Copyright: Copyright (C) 2024 Mai-Lapyst
  * Authors:   $(HTTP codearq.net/mai-lapyst, Mai-Lapyst)
  */
-module serde.yaml;
+module serde.yaml.error;
 
-public import serde.yaml.ser;
-public import serde.yaml.de;
-public import serde.yaml.error;
+import serde.error;
+
+class YamlParsingException : SerdeException {
+    this(string msg, string file = __FILE__, size_t line = __LINE__, Throwable nextInChain = null) pure nothrow @nogc @safe {
+        super(msg, file, line, nextInChain);
+    }
+    this(string msg, Throwable nextInChain, string file = __FILE__, size_t line = __LINE__) pure nothrow @nogc @safe {
+        super(msg, file, line, nextInChain);
+    }
+}
