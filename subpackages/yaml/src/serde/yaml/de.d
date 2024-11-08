@@ -29,7 +29,7 @@ import serde.de;
 import serde.common;
 import serde.yaml.error;
 
-import std.traits : isScalarType, isFloatingPoint, isSomeString;
+import std.traits : isScalarType, isFloatingPoint, isSomeString, isSomeChar;
 import std.conv : to, parse, ConvException;
 import std.string : toLower, startsWith;
 import std.math.traits : isNaN;
@@ -353,36 +353,34 @@ class YamlDeserializer : Deserializer {
         }
     }
 
-    void read_basic(T)(ref T value) if (isScalarType!T && !is(T == bool)) {
+    void read_basic(T)(ref T value) if (isFloatingPoint!T) {
         auto tag = this.read_tag();
         // TODO: use the tag somehow...
 
-        static if (isFloatingPoint!T) {
-            switch (this.buffer.front) {
-                case '-': {
-                    if (this.buffer.startsWith("-i")) {
-                        goto Lerr;
-                    }
-                    else if (this.buffer.startsWith("-.inf")) {
-                        this.buffer.popFrontExactly(5);
-                        value = -T.infinity;
-                        return;
-                    }
-                    break;
-                }
-                case '.': {
-                    auto c = this.buffer.peek;
-                    if (c == 'i' || c == 'n' ) {
-                        this.buffer.popFront();
-                    }
-                    break;
-                }
-                case 'i':
-                case 'n': {
+        switch (this.buffer.front) {
+            case '-': {
+                if (this.buffer.startsWith("-i")) {
                     goto Lerr;
                 }
-                default: break;
+                else if (this.buffer.startsWith("-.inf")) {
+                    this.buffer.popFrontExactly(5);
+                    value = -T.infinity;
+                    return;
+                }
+                break;
             }
+            case '.': {
+                auto c = this.buffer.peek;
+                if (c == 'i' || c == 'n' ) {
+                    this.buffer.popFront();
+                }
+                break;
+            }
+            case 'i':
+            case 'n': {
+                goto Lerr;
+            }
+            default: break;
         }
 
         try {
@@ -395,6 +393,17 @@ class YamlDeserializer : Deserializer {
 
         Lerr:
             throw new YamlParsingException("Expected floatingpoint value, '-.inf', '.inf' or '.nan'");
+    }
+
+    void read_basic(T)(ref T value) if (isScalarType!T && !is(T == bool) && !isFloatingPoint!T) {
+        auto tag = this.read_tag();
+        // TODO: use the tag somehow...
+        static if (isSomeChar!T) {
+            value = this.buffer.front;
+            this.buffer.popFront();
+        } else {
+            value = this.buffer.readInt!T(true);
+        }
     }
 
     // Test float parsing
@@ -441,7 +450,9 @@ class YamlDeserializer : Deserializer {
     unittest {
         static immutable int[string] testCases = [
             "!!int -1": -1,
-            "12": 12
+            "12": 12,
+            "0xC": 0xC,
+            "0o14": 12,
         ];
         foreach (inp, r; testCases) {
             int i = 0;
@@ -450,8 +461,8 @@ class YamlDeserializer : Deserializer {
                 de.read_basic(i);
                 assert(de.buffer.empty, "Failed parsing '" ~ inp ~ "'; still data left in buffer");
             }
-            catch (YamlParsingException e) {
-                assert(0, "Failed parsing '" ~ inp ~ "'; got YamlParsingException: " ~ e.message());
+            catch (Exception e) {
+                assert(0, "Failed parsing '" ~ inp ~ "'; got Exception: " ~ e.message());
             }
             assert(i == r, "Failed parsing '" ~ inp ~ "'; expected " ~ r.to!string ~ " but got " ~ i.to!string);
         }
@@ -470,8 +481,8 @@ class YamlDeserializer : Deserializer {
                 de.read_basic(ch);
                 assert(de.buffer.empty, "Failed parsing '" ~ inp ~ "'; still data left in buffer");
             }
-            catch (YamlParsingException e) {
-                assert(0, "Failed parsing '" ~ inp ~ "'; got YamlParsingException: " ~ e.message());
+            catch (Exception e) {
+                assert(0, "Failed parsing '" ~ inp ~ "'; got Exception: " ~ e.message());
             }
             assert(ch == r, "Failed parsing '" ~ inp ~ "'; expected " ~ r.to!string ~ " but got " ~ ch.to!string);
         }
