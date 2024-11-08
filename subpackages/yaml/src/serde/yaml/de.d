@@ -728,6 +728,33 @@ class YamlDeserializer : Deserializer {
         throw new YamlParsingException("read_ignore is NIY!");
     }
 
+    void read_enum(T)(ref T value) if (is(T == enum)) {
+        string val;
+        this.read_string(val);
+        value = getEnumValueByKey!T(val);
+    }
+
+    unittest {
+        enum Planet { Earth, Mars, Jupiter }
+        static immutable testCases = [
+            "Earth": Planet.Earth,
+            "Mars": Planet.Mars,
+            "Jupiter": Planet.Jupiter,
+        ];
+        foreach (inp, r; testCases) {
+            Planet p;
+            try {
+                auto de = new YamlDeserializer(inp);
+                de.read_enum(p);
+                assert(de.buffer.empty, "Failed parsing '" ~ inp ~ "'; still data left in buffer");
+            }
+            catch (Exception e) {
+                assert(0, "Failed parsing '" ~ inp ~ "'; got Exception: " ~ e.message());
+            }
+            assert(p == r, "Failed parsing '" ~ inp ~ "'; expected " ~ r.to!string ~ " but got " ~ p.to!string ~ "");
+        }
+    }
+
 }
 
 void fromYaml(T)(auto ref T value, string inp) {
