@@ -28,7 +28,7 @@ module serde.json.de;
 import serde.de;
 import serde.common;
 
-import std.traits : isFloatingPoint, isScalarType, isSomeString;
+import std.traits : isFloatingPoint, isScalarType, isSomeString, isSomeChar;
 import std.string : startsWith;
 import std.typecons : Nullable, nullable;
 import std.range : popFrontExactly;
@@ -139,15 +139,46 @@ class JsonDeserializer : Deserializer {
                 return;
             }
             default: {
+                static if (isSomeChar!T) {
+                    T[] str;
+                    this.read_string(str);
+                    if (str.length != 1) {
+                        throw new Exception("Expected number or non-empty string");
+                    }
+                    value = str[0];
+                    return;
+                }
                 throw new Exception("Expected integer");
             }
         }
     }
 
+    unittest {
+        import std.conv;
+        static immutable testCases = [
+            "\"a\"": 'a',
+            "\"💙\"": '💙',
+            "97": 'a',
+        ];
+        foreach (inp, r; testCases) {
+            dchar ch = 0;
+            try {
+                auto de = new JsonDeserializer(inp);
+                de.read_basic(ch);
+                assert(de.buffer.empty, "Failed parsing '" ~ inp ~ "'; still data left in buffer");
+            }
+            catch (Exception e) {
+                assert(0, "Failed parsing '" ~ inp ~ "'; got Exception: " ~ e.message());
+            }
+            assert(ch == r, "Failed parsing '" ~ inp ~ "'; expected " ~ r.to!string ~ " but got " ~ ch.to!string);
+        }
+    }
+
     void read_string(T)(ref T str) if (isSomeString!T) {
+        import std.conv;
         skip_ws;
         consume_char('"', "Expected string start");
-        str = backslashUnescape(this.buffer, '"');
+        str = backslashUnescape(this.buffer, '"').to!T;
         consume_char('"', "Expected string end");
     }
 
