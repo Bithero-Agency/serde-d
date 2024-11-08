@@ -95,8 +95,8 @@ private auto isNsPlainSafe(dchar ch, Context ctx) {
     switch (ctx) {
         case Context.FlowOut: return ch.isNsPlainSafeOut;
         case Context.FlowIn: return ch.isNsPlainSafeIn;
-        case Context.BlockOut: return ch.isNsPlainSafeOut;
-        case Context.BlockIn: return ch.isNsPlainSafeIn;
+        case Context.BlockKey: return ch.isNsPlainSafeOut;
+        case Context.FlowKey: return ch.isNsPlainSafeIn;
         default: return false;
     }
 }
