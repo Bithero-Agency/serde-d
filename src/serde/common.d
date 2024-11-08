@@ -32,6 +32,7 @@ import std.meta : staticMap;
 
 import ninox.std.callable;
 import ninox.std.traits : RefT;
+import serde.error;
 
 /// Basic escape function that does slash escaption like in JSON strings
 void backslashEscape(alias Sink)(const(ubyte)[] chars) {
@@ -155,6 +156,155 @@ void skipWhitespace(R)(auto ref R inp) {
         else
             break;
     }
+}
+
+T readInt(T, R)(auto ref R inp, bool supportPrefixes = true) {
+    import std.traits : isUnsigned;
+    static if (!isUnsigned!T) {
+        bool shouldNegate = false;
+        if (inp.front() == '-') {
+            inp.popFront();
+            shouldNegate = true;
+        }
+    }
+
+    int base = 10;
+    if (supportPrefixes && inp.front() == '0') {
+        inp.popFront();
+        switch (inp.front()) {
+            case 'x': case 'X': {
+                // hexadecimal
+                base = 16;
+                break;
+            }
+            case 'o': case 'O': {
+                // octal
+                base = 8;
+                break;
+            }
+            case 'b': case 'B': {
+                // binary
+                base = 2;
+                break;
+            }
+            case 'd': case 'D': {
+                // decimal
+                base = 10;
+                break;
+            }
+            default: goto Lstart;
+        }
+        inp.popFront();
+    }
+
+    Lstart:
+    static if (!isUnsigned!T) {
+        long v;
+    } else {
+        ulong v;
+    }
+
+    auto ch = inp.front();
+    switch (ch) {
+        case '0': .. case '1': {
+            v = ch - '0';
+            inp.popFront();
+            goto Lparse;
+        }
+        case '2': .. case '7': {
+            if (base < 8) throw new SerdeException("Expected '0' or '1' for binary number");
+            v = ch - '0';
+            inp.popFront();
+            goto Lparse;
+        }
+        case '8': .. case '9': {
+            if (base < 10) throw new SerdeException("Expected '0' - '7' for octal number");
+            v = ch - '0';
+            inp.popFront();
+            goto Lparse;
+        }
+        case 'a': .. case 'f': {
+            if (base < 16) throw new SerdeException("Expected '0' - '9' for decimal number");
+            v = (ch - 'a') + 10;
+            inp.popFront();
+            goto Lparse;
+        }
+        case 'A': .. case 'F': {
+            if (base < 16) throw new SerdeException("Expected '0' - '9' for decimal number");
+            v = (ch - 'A') + 10;
+            inp.popFront();
+            goto Lparse;
+        }
+        default: {
+            switch (base) {
+                case 2: throw new SerdeException("Expected '0' - '1' for decimal number");
+                case 8: throw new SerdeException("Expected '0' - '7' for octal number");
+                case 10: throw new SerdeException("Expected '0' - '9' for decimal number");
+                case 16: throw new SerdeException("Expected '0' - '9' / 'a' - 'f' for hexadecimal number");
+                default: assert(0, "Should never reach...");
+            }
+        }
+    }
+
+    Lparse: while (!inp.empty()) {
+        ch = inp.front();
+        switch (ch) {
+            case '0': .. case '1': {
+                v *= base;
+                v += ch - '0';
+                inp.popFront();
+                continue;
+            }
+            case '2': .. case '7': {
+                if (base < 8) break Lparse;
+                v *= base;
+                v += ch - '0';
+                inp.popFront();
+                continue;
+            }
+            case '8': .. case '9': {
+                if (base < 10) break Lparse;
+                v *= base;
+                v += ch - '0';
+                inp.popFront();
+                continue;
+            }
+            case 'a': .. case 'f': {
+                if (base < 16) break Lparse;
+                v *= base;
+                v += (ch - 'a') + 10;
+                inp.popFront();
+                continue;
+            }
+            case 'A': .. case 'F': {
+                if (base < 16) break Lparse;
+                v *= base;
+                v += (ch - 'A') + 10;
+                inp.popFront();
+                continue;
+            }
+            default: {
+                break Lparse;
+            }
+        }
+    }
+
+    static if (!isUnsigned!T) {
+        v = shouldNegate ? v*-1 : v;
+    }
+    if (v > T.max) {
+        throw new SerdeException("Cannot fit integer");
+    }
+    return cast(T) v;
+}
+
+unittest {
+    assert( "12".readInt!int == 12 );
+    assert( "0d12".readInt!int == 12 );
+    assert( "0b1100".readInt!int == 12 );
+    assert( "0xc".readInt!int == 12 );
+    assert( "0xC".readInt!int == 12 );
+    assert( "0o14".readInt!int == 12 );
 }
 
 struct ReadBuffer {
