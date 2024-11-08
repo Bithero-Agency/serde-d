@@ -296,19 +296,13 @@ class JsonDeserializer : Deserializer {
 
     MapAccess read_map(K, V)() {
         skip_ws;
-        if (is(T == class)) {
-            if (this.inp.startsWith("null")) {
-                this.inp = this.inp[4..$];
-                return null;
-            }
-        }
         this.consume_char('{', "Expected map start");
         return new MapAccess();
     }
 
     MapAccess read_struct(T)(ref T value) if (is(T == struct) || is(T == class)) {
         skip_ws;
-        if (is(T == class)) {
+        static if (is(T == class)) {
             if (this.buffer.startsWith("null")) {
                 this.buffer.popFrontExactly(4);
                 value = null;
