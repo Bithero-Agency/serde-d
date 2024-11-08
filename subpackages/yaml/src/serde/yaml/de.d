@@ -755,6 +755,102 @@ class YamlDeserializer : Deserializer {
         }
     }
 
+    class SeqAccess {
+        private {
+            Context returnTo;
+            bool atStart = true;
+        }
+
+        this(Context returnTo) {
+            this.returnTo = returnTo;
+        }
+
+        Nullable!ulong size_hint() { return Nullable!ulong(); }
+
+        bool read_element(T)(ref T element) {
+            buffer.skipWhitespace();
+
+            bool isFlowStyle = ctx == Context.FlowIn;
+            if (isFlowStyle) {
+                if (buffer.front == ']') return false;
+                if (!atStart) {
+                    if (buffer.front != ',') throw new YamlParsingException("Expected flow-style collection seperator");
+                    buffer.popFront();
+                }
+                atStart = false;
+                buffer.skipWhitespace();
+                if (buffer.front == ']') return false;
+
+                element.deserialize(this.outer);
+
+                return true;
+            }
+            else {
+                if (!buffer.startsWith("- ")) return false;
+                buffer.popFront();
+                buffer.popFront();
+                element.deserialize(this.outer);
+                return true;
+            }
+
+            return false;
+        }
+
+        void end() {
+            buffer.skipWhitespace();
+            if (ctx == Context.FlowIn) {
+                consumeChar(']', "Expected flow-style collection end");
+            }
+            ctx = returnTo;
+        }
+    }
+
+    SeqAccess read_seq(T)() {
+        auto tag = this.read_tag();
+        // TODO: use the tag somehow...
+
+        if (this.buffer.front == '[') {
+            this.buffer.popFront();
+            auto access = new SeqAccess(ctx);
+            this.ctx = Context.FlowIn;
+            return access;
+        }
+        else {
+            // assume an block-style collection...
+            return new SeqAccess(ctx);
+        }
+    }
+
+    // Test sequence parsing
+    unittest {
+        static immutable testCases = [
+            "[1, 2]": [1, 2],
+            "- 1\n- 2": [1, 2],
+        ];
+        foreach (inp, r; testCases) {
+            int[] seq;
+            try {
+                auto de = new YamlDeserializer(inp);
+
+                auto access = de.read_seq!int();
+                assert(access !is null, "Failed parsing '" ~ inp ~ "'; got no SeqAccess");
+
+                int elem;
+                while (access.read_element(elem)) {
+                    seq ~= elem;
+                }
+
+                access.end();
+
+                assert(de.buffer.empty, "Failed parsing '" ~ inp ~ "'; still data left in buffer");
+            }
+            catch (Exception e) {
+                assert(0, "Failed parsing '" ~ inp ~ "'; got Exception: " ~ e.message());
+            }
+            assert(seq == r, "Failed parsing '" ~ inp ~ "'; expected " ~ r.to!string ~ " but got " ~ seq.to!string ~ "");
+        }
+    }
+
 }
 
 void fromYaml(T)(auto ref T value, string inp) {
