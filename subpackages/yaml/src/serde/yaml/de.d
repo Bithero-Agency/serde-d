@@ -35,6 +35,7 @@ import std.string : toLower, startsWith;
 import std.math.traits : isNaN;
 import std.range : popFrontExactly;
 import std.algorithm : countUntil;
+import std.typecons : Nullable;
 
 private auto isNsDecDigit(dchar ch) => ch >= '0' && ch <= '9';
 private auto isNsHexDigit(dchar ch) => ch.isNsDecDigit || (ch >= 'A' && ch <= 'F') || (ch >= 'a' && ch <= 'f');
@@ -113,6 +114,8 @@ class YamlDeserializer : Deserializer {
     ReadBuffer buffer;
 
     Context ctx;
+    long lvl = 0;
+    long lineIndent = 0;
 
     this(string inp) {
         this.buffer = ReadBuffer(cast(char[]) inp);
@@ -125,6 +128,25 @@ class YamlDeserializer : Deserializer {
     }
     this(ReadBuffer.Source source) {
         this.buffer = ReadBuffer(source);
+    }
+
+    private void skipWsAndNl() {
+        while (!this.buffer.empty) {
+            dchar ch = this.buffer.front;
+            if (ch == '\n' || ch == '\r') {
+                lineIndent = 0;
+            }
+            else if (ch == ' ') {
+                lineIndent += 1;
+            }
+            else if (ch == '\t') {
+                lineIndent = -1;
+            }
+            else {
+                return;
+            }
+            this.buffer.popFront();
+        }
     }
 
     // https://yaml.org/spec/1.2.2/#rule-ns-uri-char
@@ -220,7 +242,7 @@ class YamlDeserializer : Deserializer {
     }
 
     private string read_tag() {
-        this.buffer.skipWhitespace;
+        this.skipWsAndNl;
 
         if (this.buffer.front != '!') {
             return null;
@@ -864,6 +886,143 @@ class YamlDeserializer : Deserializer {
         else {
             // assume an block-style collection...
             return new SeqAccess(ctx);
+        }
+    }
+
+    class MapAccess {
+        private {
+            Context returnTo;
+            bool isBlock;
+            long oldLvl;
+            bool atStart = true;
+        }
+
+        this(Context returnTo, bool isBlock) {
+            this.returnTo = returnTo;
+            this.isBlock = isBlock;
+            this.oldLvl = lvl;
+        }
+
+        bool read_key(T)(ref T key) {
+            ctx = isBlock ? Context.BlockKey : Context.FlowKey;
+
+            if (isBlock) {
+                // is block-style mapping
+
+                this.outer.skipWsAndNl();
+
+                if (lineIndent < lvl || buffer.empty) return false;
+
+                if (!atStart) {
+                    if (lineIndent > lvl) throw new YamlParsingException("Syntax error: mismatching level of indentation");
+                }
+                else {
+                    // first key, record the level as the new one!
+                    lvl = lineIndent;
+                    atStart = false;
+                }
+
+                string s;
+                this.outer.read_string(s); // TODO: read only block-style strings, no tag or anything...
+                key = s;
+
+                return true;
+            }
+            else {
+                // is flow-style mapping
+                buffer.skipWhitespace();
+                if (buffer.front == '}') return false;
+                if (!atStart) {
+                    if (buffer.front != ',') throw new YamlParsingException("Expected flow-style mapping seperator");
+                    buffer.popFront();
+                }
+                atStart = false;
+                buffer.skipWhitespace();
+                if (buffer.front == '}') return false;
+
+                string s;
+                this.outer.read_string(s); // TODO: read only flow-style string, no tag or anything...
+                key = s;
+
+                return true;
+            }
+
+            return false;
+        }
+
+        void read_value(T)(ref T value) {
+            dchar ch;
+
+            ctx = isBlock ? Context.BlockIn : Context.FlowIn;
+            buffer.skipWhitespace();
+
+            if (buffer.front != ':') goto Lerr;
+            buffer.popFront();
+
+            ch = buffer.front;
+            if (ch != ' ' && ch != '\n' && ch != '\r') goto Lerr;
+            buffer.popFront();
+
+            value.deserialize(this.outer);
+            return;
+
+            Lerr:
+                throw new YamlParsingException("Expected mapping key-value seperator");
+        }
+
+        void end() {
+            buffer.skipWhitespace();
+            if (!isBlock) {
+                consumeChar('}', "Expected flow-style mapping end");
+            }
+            ctx = returnTo;
+            lvl = oldLvl;
+        }
+    }
+
+    MapAccess read_map(K, V)() {
+        auto tag = this.read_tag();
+        // TODO: use the tag somehow...
+
+        if (this.buffer.front == '{') {
+            this.buffer.popFront();
+            return new MapAccess(ctx, false);
+        }
+        else {
+            // assume an block-style mapping...
+            return new MapAccess(ctx, true);
+        }
+    }
+
+    // Test mapping parsing
+    unittest {
+        auto testCases = [
+            "{\"a\": 1, \"b\": 2}": ["a": 1, "b": 2],
+            "a: 1\nb: 2": ["a": 1, "b": 2],
+        ];
+        foreach (inp, r; testCases) {
+            int[string] map;
+            try {
+                auto de = new YamlDeserializer(inp);
+
+                auto access = de.read_map!(string, int)();
+                assert(access !is null, "Failed parsing '" ~ inp ~ "'; got no MapAccess");
+
+                string key;
+                while (access.read_key(key)) {
+                    int val;
+                    access.read_value(val);
+                    map[key] = val;
+                }
+
+                access.end();
+
+                assert(de.buffer.empty, "Failed parsing '" ~ inp ~ "'; still data left in buffer");
+            }
+            catch (Exception e) {
+                assert(0, "Failed parsing '" ~ inp ~ "'; got Exception: " ~ e.message());
+            }
+            assert(map == r, "Failed parsing '" ~ inp ~ "'; expected " ~ r.to!string ~ " but got " ~ map.to!string ~ "");
         }
     }
 
