@@ -244,11 +244,20 @@ if (
         }
     }
 
+    enum hasPropertyGetter(alias overload) = (
+        hasFunctionAttributes!(overload, "@property")
+        && !is(ReturnType!overload == void)
+        && Parameters!overload.length == 0
+    );
     enum isGetter(alias Member) = (
         Member.compiles
         && (
             (is(Member.type == function) && Member.has_UDA!(Serde.Getter))
-            || (isCallable!(Member.raw) && hasFunctionAttributes!(Member.raw, "@property"))
+            || (
+                isCallable!(Member.raw)
+                && hasFunctionAttributes!(Member.raw, "@property")
+                && Filter!(hasPropertyGetter, Member.overloads).length == 1
+            )
         )
     );
     template correctProp(alias Member)
@@ -261,11 +270,15 @@ if (
                     getter = AliasSeq!(getter, overload);
                 }
             }
-            static assert(getter.length == 1, "Could not retrieve getter from overloads for @property " ~ Member.name);
 
-            enum name = Member.name;
-            alias type = Member.type;
-            alias raw = getter[0];
+            static if (getter.length != 1) {
+                static assert(0, "Could not retrieve getter from overloads for @property " ~ Member.name);
+            }
+            else {
+                enum name = Member.name;
+                alias type = Member.type;
+                alias raw = getter[0];
+            }
         } else {
             alias correctProp = Member;
         }
