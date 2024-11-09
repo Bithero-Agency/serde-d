@@ -200,11 +200,19 @@ if (
     );
     alias fields = Filter!(isFieldOfInterest, GetFields!T);
 
+    enum hasPropertySetter(alias overload) = (
+        hasFunctionAttributes!(overload, "@property")
+        && Parameters!overload.length == 1
+    );
     enum isSetter(alias Member) = (
         Member.compiles
         && (
             (is(Member.type == function) && Member.has_UDA!(Serde.Setter))
-            || (isCallable!(Member.raw) && hasFunctionAttributes!(Member.raw, "@property"))
+            || (
+                isCallable!(Member.raw)
+                && hasFunctionAttributes!(Member.raw, "@property")
+                && Filter!(hasPropertySetter, Member.overloads).length == 1
+            )
         )
     );
     template correctProp(alias Member)
