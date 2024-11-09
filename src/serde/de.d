@@ -297,7 +297,7 @@ if (
     BitArray flags = BitArray(_source, members.length);
 
     enum memberName(alias m) = m.name;
-    static immutable fieldNames = [ staticMap!(memberName, members) ];
+    static immutable string[] fieldNames = [ staticMap!(memberName, members) ];
 
     static foreach (m; members) {
         static if (m.optional) {
