@@ -65,7 +65,8 @@ abstract class Deserializer {
     MapAccess read_struct(T)(ref T value) if (is(T == struct) || is(T == class));
 }
 
-package (serde) struct IgnoreValue {}
+/// Used as marker to ignore an value from the input
+struct IgnoreValue {}
 
 /// Deserializes scalar types (bool, all integers, float, double, real, all char types)
 pragma(inline) void deserialize(T, D : Deserializer)(ref T value, D de) if (isScalarType!T && !is(T == enum)) {
