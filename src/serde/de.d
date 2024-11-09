@@ -345,3 +345,26 @@ if (
 
     access.end();
 }
+
+unittest {
+    class A {
+    @(Serde.Optional):
+
+        @property void my_prop(int i) {}
+
+        @(Serde.Setter)
+        void my_setter(int i, int j) {}
+    }
+
+    class FooSerializer : Deserializer {
+        override void read_ignore() {}
+        class MapAccess : Deserializer.MapAccess {
+            bool read_key(K)(ref K key) { return false; }
+            void read_value(V)(ref V val) {}
+            void end() {}
+        }
+        MapAccess read_struct(T)(ref T val) { return new MapAccess(); }
+    }
+
+    A a; deserialize(a, new FooSerializer());
+}
