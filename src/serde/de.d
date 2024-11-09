@@ -58,7 +58,7 @@ abstract class Deserializer {
 
     interface MapAccess {
         bool read_key(K)(ref K key);
-        bool read_value(V)(ref V value);
+        void read_value(V)(ref V value);
         void end();
     }
     MapAccess read_map(K, V)();
