@@ -214,14 +214,19 @@ if (
             alias setter = AliasSeq!();
             static foreach (overload; overloads) {
                 static if (Parameters!overload.length == 1) {
-                    setter = AliasSeq!(sgetter, overload);
+                    setter = AliasSeq!(setter, overload);
                 }
             }
-            static assert(setter.length == 1, "Could not retrieve setter from overloads for @property " ~ Member.name);
 
-            enum name = Member.name;
-            alias type = Member.type;
-            alias raw = setter[0];
+            static if (setter.length != 1) {
+                static assert(0, "Could not retrieve setter from overloads for @property " ~ Member.name);
+            }
+            else {
+                enum name = Member.name;
+                alias type = Member.type;
+                alias raw = setter[0];
+                enum index = Member.index;
+            }
         } else {
             alias correctProp = Member;
         }
