@@ -27,6 +27,7 @@ module serde.json.de;
 
 import serde.de;
 import serde.common;
+import serde.value;
 
 import std.traits : isFloatingPoint, isScalarType, isSomeString, isSomeChar;
 import std.string : startsWith;
