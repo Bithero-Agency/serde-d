@@ -27,10 +27,10 @@
  */
 module serde.value;
 
-import std.variant : StdVariant = VariantN;
+import std.variant : VariantN;
 import std.traits : isInstanceOf;
 
-enum isStdVariant(alias T) = isInstanceOf!(StdVariant, T);
+enum isStdVariant(alias T) = isInstanceOf!(VariantN, T);
 
 version (SerdeUseNinoxVariant) {
     version (Have_ninox_d_std_variant) {
@@ -50,6 +50,8 @@ version (SerdeUseNinoxVariant) {
 }
 else {
     pragma(msg, "Using libphobos std.variant to provide AnyValue");
+
+    import std.variant : StdVariant = Variant;
 
     /// Default type to provide an "any" value.
     alias AnyValue = StdVariant;
