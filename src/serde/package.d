@@ -28,4 +28,4 @@ module serde;
 public import serde.attrs;
 public import serde.ser;
 public import serde.de;
-public import serde.value : AnyValue;
+public import serde.value : AnyValue, isAnyValue;
