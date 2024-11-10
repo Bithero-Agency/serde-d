@@ -38,6 +38,7 @@ import std.typecons : Nullable;
 
 import serde.attrs;
 import serde.error;
+import serde.value;
 
 abstract class Deserializer {
     void read_basic(T)(ref T value) if (isScalarType!T && !is(T == enum));
@@ -47,6 +48,8 @@ abstract class Deserializer {
     void read_enum(T)(ref T value) if (is(T == enum));
 
     void read_ignore();
+
+    void read_any(T)(ref T value) if (isAnyValue!T);
 
     interface SeqAccess {
         Nullable!ulong size_hint();
@@ -168,11 +171,19 @@ void deserialize(T, D : Deserializer)(ref T tuple, D de) if (isInstanceOf!(StdTu
     access.end();
 }
 
+/// Deserializes an "any" value;
+/// This can be either an instance of libphobos `std.variant.VariantN`,
+/// or alternatively, one of `ninox.std.variant.Variant`.
+void deserialize(T, D : Deserializer)(ref T var, D de) if (isAnyValue!T) {
+    de.read_any(var);
+}
+
 private enum isSpecialStructOrClass(T) = (
     isInstanceOf!(StdTuple, T)
     || is(T == IgnoreValue)
     || isInstanceOf!(DList, T)
     || isInstanceOf!(SList, T)
+    || isAnyValue!T
 );
 
 void deserialize(T, D : Deserializer)(ref T value, D de)
