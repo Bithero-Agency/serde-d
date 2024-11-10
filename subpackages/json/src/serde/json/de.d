@@ -225,6 +225,84 @@ class JsonDeserializer : Deserializer {
         }
     }
 
+    void read_any(T)(ref T value) if (isAnyValue!T) {
+        skip_ws;
+        switch (this.buffer.front) {
+            case 'n': {
+                read_null();
+                value = null;
+                break;
+            }
+            case 't': case 'f': {
+                bool b;
+                read_basic(b);
+                value = b;
+                break;
+            }
+            case '"': {
+                string str;
+                read_string(str);
+                value = str;
+                break;
+            }
+            case '0': .. case '9':
+            case '-':
+            {
+                double d;
+                this.read_basic(d);
+                if (cast(long) d == d) {
+                    // is a non-floating point number
+                    value = cast(long) d;
+                }
+                else {
+                    value = d;
+                }
+                break;
+            }
+            case '[': {
+                T[] array;
+                array.deserialize(this);
+                value = array;
+                break;
+            }
+            case '{': {
+                T[string] map;
+                map.deserialize(this);
+                value = map;
+                break;
+            }
+            default: {
+                throw new Exception("Syntax error");
+            }
+        }
+    }
+
+    /// Test read_any
+    unittest {
+        import std.variant : Variant;
+        import std.conv : to;
+        auto testCases = [
+            "true": Variant(true),
+            "false": Variant(false),
+            "123": Variant(cast(long) 123),
+            "-123": Variant(cast(long) -123),
+            "12.3": Variant(cast(double) 12.3),
+            "\"abc\"": Variant("abc"),
+            "null": Variant(null),
+            "[1, 2]": Variant([Variant(1), Variant(2)]),
+            "{\"a\": 12}": Variant([ "a": Variant(12) ]),
+        ];
+        foreach (inp, expected; testCases) {
+            Variant var;
+            try {
+                (new JsonDeserializer(inp)).read_any(var);
+            } catch (Exception e) {
+                assert(0, "Failed to parse '" ~ inp ~ "': got Exception: " ~ e.message());
+            }
+            assert(var == expected, "Failed to parse '" ~ inp ~ "': expected " ~ expected.to!string ~ " but got " ~ var.to!string);
+        }
+    }
+
     void read_enum(T)(ref T value) if (is(T == enum)) {
         string val;
         read_string(val);
