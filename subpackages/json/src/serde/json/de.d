@@ -200,11 +200,9 @@ class JsonDeserializer : Deserializer {
             case '"': {
                 string str; read_string(str); break;
             }
-            case '0': .. case '9': {
-                ulong l; read_basic(l); break;
-            }
+            case '0': .. case '9':
             case '-': {
-                long l; read_basic(l); break;
+                double d; this.read_basic(d); break;
             }
             case '[': case '{': {
                 char[] stack;
