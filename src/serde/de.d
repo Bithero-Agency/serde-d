@@ -336,6 +336,12 @@ if (
         }
     }
 
+    static if (is(T == class)) {
+        if (value is null) {
+            value = new T();
+        }
+    }
+
     FieldInfo fi;
     while (access.read_key(fi)) {
         Lsw: switch (fi.index) {
