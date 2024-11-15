@@ -65,7 +65,10 @@ abstract class Deserializer {
         void end();
     }
     MapAccess read_map(K, V)();
-    MapAccess read_struct(T)(ref T value) if (is(T == struct) || is(T == class));
+
+    /// Starts reading a struct/class.
+    /// If you want to set the class to `null`, parse the entire value here and return `null`.
+    MapAccess read_struct();
 }
 
 /// Used as marker to ignore an value from the input
@@ -198,9 +201,12 @@ if (
     import std.meta, std.traits;
     import ninox.std.traits;
 
-    auto access = de.read_struct!T(value);
+    auto access = de.read_struct();
     if (access is null) {
         // value was already completly parsed by read_struct.
+        static if (is(T == class)) {
+            value = null;
+        }
         return;
     }
 
@@ -382,7 +388,7 @@ unittest {
             void read_value(V)(ref V val) {}
             void end() {}
         }
-        MapAccess read_struct(T)(ref T val) { return new MapAccess(); }
+        override MapAccess read_struct() { return new MapAccess(); }
     }
 
     A a; deserialize(a, new FooSerializer());

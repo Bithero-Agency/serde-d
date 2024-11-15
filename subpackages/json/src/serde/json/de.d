@@ -343,7 +343,7 @@ class JsonDeserializer : Deserializer {
         return new SeqAccess();
     }
 
-    class MapAccess {
+    class MapAccess : Deserializer.MapAccess {
         bool atStart = true;
         bool read_key(T)(ref T key) {
             skip_ws;
@@ -377,12 +377,11 @@ class JsonDeserializer : Deserializer {
         return new MapAccess();
     }
 
-    MapAccess read_struct(T)(ref T value) if (is(T == struct) || is(T == class)) {
+    override MapAccess read_struct() {
         skip_ws;
         static if (is(T == class)) {
             if (this.buffer.startsWith("null")) {
                 this.buffer.popFrontExactly(4);
-                value = null;
                 return null;
             }
         }

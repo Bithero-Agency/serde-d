@@ -889,7 +889,7 @@ class YamlDeserializer : Deserializer {
         }
     }
 
-    class MapAccess {
+    class MapAccess : Deserializer.MapAccess {
         private {
             Context returnTo;
             bool isBlock;
@@ -1026,14 +1026,13 @@ class YamlDeserializer : Deserializer {
         }
     }
 
-    MapAccess read_struct(T)(ref T value) if (is(T == struct) || is(T == class)) {
+    override MapAccess read_struct() {
         auto tag = this.read_tag();
         // TODO: use the tag somehow...
 
         if (is(T == class)) {
             if (this.buffer.startsWith("null")) {
                 this.buffer.popFrontExactly(4);
-                value = null;
                 return null;
             }
         }
