@@ -4,8 +4,8 @@
 	],
 	"copyright": "Copyright © 2024, Mai Lapyst",
 	"dependencies": {
-		"ninox-d_std:callable": "~>1.7.11",
-		"ninox-d_std:traits": "~>1.7.11"
+		"ninox-d_std:callable": "~>1.7.12",
+		"ninox-d_std:traits": "~>1.7.12"
 	},
 	"subPackages": [
 		"./subpackages/json",
