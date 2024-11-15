@@ -35,6 +35,7 @@ import std.traits :
 import std.container : SList, DList;
 import std.typecons : StdTuple = Tuple;
 import std.typecons : Nullable;
+import ninox.std.traits : hasDerivedMember;
 
 import serde.attrs;
 import serde.error;
@@ -198,7 +199,18 @@ if (
     (is(T == struct) || is(T == class))
     && !is(T == enum)
     && !isSpecialStructOrClass!T
+    && hasDerivedMember!(T, "deserializeInstance")
+) {
+    T.deserializeInstance(value, de);
+}
+
+void deserialize(T, D : Deserializer)(ref T value, D de)
+if (
+    (is(T == struct) || is(T == class))
+    && !is(T == enum)
+    && !isSpecialStructOrClass!T
     && !__traits(compiles, T.deserialize)
+    && !hasDerivedMember!(T, "deserializeInstance")
     && !Serde.isUfcs!T
 )
 {
