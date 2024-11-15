@@ -455,17 +455,11 @@ void fromJsonStrict(T)(auto ref T value, ReadBuffer.Source.DgT source) {
 
 pragma(inline) T parseJson(T)(string inp) {
     T val = T.init;
-    static if (is(T == class)) {
-        val = new T();
-    }
     val.fromJson(inp);
     return val;
 }
 pragma(inline) T parseJsonStrict(T)(string inp) {
     T val = T.init;
-    static if (is(T == class)) {
-        val = new T();
-    }
     val.fromJsonStrict(inp);
     return val;
 }
