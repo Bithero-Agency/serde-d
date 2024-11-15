@@ -252,7 +252,7 @@ if (
     enum isGetter(alias Member) = (
         Member.compiles
         && (
-            (is(Member.type == function) && Member.has_UDA!(Serde.Getter))
+            (isFunction!(Member.raw) && Member.has_UDA!(Serde.Getter))
             || (
                 isCallable!(Member.raw)
                 && hasFunctionAttributes!(Member.raw, "@property")

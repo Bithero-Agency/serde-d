@@ -227,7 +227,7 @@ if (
     enum isSetter(alias Member) = (
         Member.compiles
         && (
-            (is(Member.type == function) && Member.has_UDA!(Serde.Setter))
+            (isFunction!(Member.raw) && Member.has_UDA!(Serde.Setter))
             || (
                 isCallable!(Member.raw)
                 && hasFunctionAttributes!(Member.raw, "@property")
@@ -261,25 +261,27 @@ if (
     }
     alias setters = staticMap!(correctProp, Filter!(isSetter, GetDerivedMembers!T));
 
-    template fieldToMember(alias Field) {
+    template fieldToMember(size_t i, alias Field)
+    {
         enum name = Serde.getNameFromItem!(Field.raw, Field.name, false);
-        enum index = Field.index;
+        enum index = i;
         alias type = Field.type;
         enum code = "access.read_value(value." ~ Field.name ~ ");";
         alias aliases = Serde.getAliases!(Field.raw);
         enum optional = Serde.isOptional!(Field.raw);
     }
-    template methodToMember(alias Member) {
+    template methodToMember(size_t i, alias Member)
+    {
         enum name = Serde.getNameFromItem!(Member.raw, Member.name, false);
-        enum index = Member.index + fields.length;
+        enum index = i + fields.length;
         alias type = Parameters!(Member.type)[0];
         enum code = BuildImportCodeForType!type ~ " _val; access.read_value(_val); value." ~ Member.name ~ "(_val);";
         alias aliases = Serde.getAliases!(Member.raw);
         enum optional = Serde.isOptional!(Member.raw);
     }
     alias members = AliasSeq!(
-        staticMap!(fieldToMember, fields),
-        staticMap!(methodToMember, setters),
+        staticMapWithIndex!(fieldToMember, fields),
+        staticMapWithIndex!(methodToMember, setters),
     );
 
     enum denyUnknownFields = Serde.shouldDenyUnknownFields!(T);
