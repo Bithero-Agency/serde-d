@@ -365,6 +365,14 @@ class JsonDeserializer : Deserializer {
             skip_ws;
             value.deserialize(this.outer);
         }
+
+        override void ignore_value() {
+            skip_ws;
+            this.outer.consume_char(':', "Expected map colon");
+            skip_ws;
+            this.outer.read_ignore();
+        }
+
         void end() {
             skip_ws;
             consume_char('}', "Expected map end");

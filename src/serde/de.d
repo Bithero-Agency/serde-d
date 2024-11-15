@@ -62,6 +62,9 @@ abstract class Deserializer {
     interface MapAccess {
         bool read_key(K)(ref K key);
         void read_value(V)(ref V value);
+
+        void ignore_value();
+
         void end();
     }
     MapAccess read_map(K, V)();
@@ -361,8 +364,7 @@ if (
                 static if (denyUnknownFields) {
                     assert(0);
                 } else {
-                    auto ign = IgnoreValue();
-                    access.read_value(ign);
+                    access.ignore_value();
                 }
             }
         }
