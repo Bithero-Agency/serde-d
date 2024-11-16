@@ -58,7 +58,7 @@ abstract class Deserializer {
         void end();
     }
     SeqAccess read_seq();
-    SeqAccess read_tuple(T)();
+    SeqAccess read_tuple();
 
     interface MapAccess {
         bool read_key(ref AnyValue value);
@@ -173,7 +173,7 @@ void deserialize(AA, D : Deserializer)(ref AA aa, D de) if (isAssociativeArray!A
 /// Deserializes an libphobos tuple
 void deserialize(T, D : Deserializer)(ref T tuple, D de) if (isInstanceOf!(StdTuple, T)) {
     alias Elements = T.Types;
-    auto access = de.read_tuple!Elements();
+    auto access = de.read_tuple();
     static foreach (i, E; Elements) {
         access.read_element!E(tuple[i]);
     }

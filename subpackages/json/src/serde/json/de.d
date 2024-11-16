@@ -346,7 +346,7 @@ class JsonDeserializer : Deserializer {
         return new SeqAccess();
     }
 
-    SeqAccess read_tuple(Elements...)() {
+    override SeqAccess read_tuple() {
         skip_ws;
         consume_char('[', "Expected array start");
         return new SeqAccess();
