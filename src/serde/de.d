@@ -69,7 +69,7 @@ abstract class Deserializer {
 
         void end();
     }
-    MapAccess read_map(K, V)();
+    MapAccess read_map();
 
     /// Starts reading a struct/class.
     /// If you want to set the class to `null`, parse the entire value here and return `null`.
@@ -153,7 +153,7 @@ void deserialize(AA, D : Deserializer)(ref AA aa, D de) if (isAssociativeArray!A
     AA new_aa;
     scope(success) aa = new_aa;
 
-    auto access = de.read_map!(K, V)();
+    auto access = de.read_map();
     if (access is null) {
         // value was already completly parsed by read_struct.
         return;

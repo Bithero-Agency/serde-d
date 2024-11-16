@@ -83,6 +83,10 @@ class InternallyTaggedDeserializer : Deserializer {
         }
     }
 
+    override MapAccess read_map() {
+        return new MapAccess();
+    }
+
     override MapAccess read_struct() {
         return new MapAccess();
     }
@@ -111,7 +115,7 @@ template TypetagInternal(string tag) {
         import serde : AnyValue;
         import serde.typetag;
 
-        auto map = de.read_map!(string, AnyValue)();
+        auto map = de.read_map();
         InternallyTaggedDeserializer.Entry[] entries;
         string key;
         while (map.read_key(key)) {

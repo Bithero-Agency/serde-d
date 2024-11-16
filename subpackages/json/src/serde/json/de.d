@@ -396,7 +396,7 @@ class JsonDeserializer : Deserializer {
         }
     }
 
-    MapAccess read_map(K, V)() {
+    override MapAccess read_map() {
         skip_ws;
         this.consume_char('{', "Expected map start");
         return new MapAccess();
