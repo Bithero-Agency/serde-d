@@ -253,7 +253,16 @@ class JsonDeserializer : Deserializer {
                 this.read_basic(d);
                 if (cast(long) d == d) {
                     // is a non-floating point number
-                    value = cast(long) d;
+                    auto l = cast(long) d;
+                    if (l >= byte.min && l <= byte.max) {
+                        value = cast(byte) l;
+                    } else if (l >= short.min && l <= short.max) {
+                        value = cast(short) l;
+                    } else if (l >= int.min && l <= int.max) {
+                        value = cast(int) l;
+                    } else {
+                        value = l;
+                    }
                 }
                 else {
                     value = d;
