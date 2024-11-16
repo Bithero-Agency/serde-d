@@ -319,7 +319,7 @@ class JsonDeserializer : Deserializer {
         value = getEnumValueByKey!T(val);
     }
 
-    class SeqAccess {
+    class SeqAccess : Deserializer.SeqAccess {
         bool atStart = true;
         Nullable!ulong size_hint() { return Nullable!ulong(); }
         bool read_element(T)(ref T element) {
@@ -340,7 +340,7 @@ class JsonDeserializer : Deserializer {
         }
     }
 
-    SeqAccess read_seq(T)() {
+    override SeqAccess read_seq() {
         skip_ws;
         consume_char('[', "Expected array start");
         return new SeqAccess();

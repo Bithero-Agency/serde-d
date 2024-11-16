@@ -55,9 +55,9 @@ abstract class Deserializer {
     interface SeqAccess {
         Nullable!ulong size_hint();
         bool read_element(T)(ref T element);
-        bool end();
+        void end();
     }
-    SeqAccess read_seq(T)();
+    SeqAccess read_seq();
     SeqAccess read_tuple(T)();
 
     interface MapAccess {
@@ -101,7 +101,7 @@ pragma(inline) void deserialize(T, D : Deserializer)(ref T value, D de) if(is(T 
 /// Deserializes an array
 void deserialize(T, D : Deserializer)(ref T[] array, D de) if (!isSomeString!(T[])) {
     T[] new_array;
-    auto access = de.read_seq!T();
+    auto access = de.read_seq();
 
     Nullable!ulong sz_hint = access.size_hint();
     if (!sz_hint.isNull) {
@@ -120,7 +120,7 @@ void deserialize(T, D : Deserializer)(ref T[] array, D de) if (!isSomeString!(T[
 /// Deserializes an libphobos double-linked list
 void deserialize(T, D : Deserializer)(ref DList!T list, D de) {
     DList!T new_list;
-    auto access = de.read_seq!T();
+    auto access = de.read_seq();
 
     T entry;
     while (access.read_element(entry)) {
@@ -134,7 +134,7 @@ void deserialize(T, D : Deserializer)(ref DList!T list, D de) {
 /// Deserializes an libphobos single-linked list
 void deserialize(T, D : Deserializer)(ref SList!T list, D de) {
     SList!T new_list;
-    auto access = de.read_seq!T();
+    auto access = de.read_seq();
 
     T entry;
     while (access.read_element(entry)) {

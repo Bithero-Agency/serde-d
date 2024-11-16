@@ -52,6 +52,10 @@ class InternallyTaggedDeserializer : Deserializer {
         throw new SerdeException("Should not invoke read_ignore on InternallyTaggedDeserializer!");
     }
 
+    override Deserializer.SeqAccess read_seq() {
+        throw new SerdeException("Should not invoke read_seq on InternallyTaggedDeserializer!");
+    }
+
     class MapAccess : Deserializer.MapAccess {
         override bool read_key(ref AnyValue key) {
             if (entries.length > 0) {
