@@ -355,21 +355,6 @@ class JsonDeserializer : Deserializer {
     class MapAccess : Deserializer.MapAccess {
         bool atStart = true;
 
-        bool read_key(T)(ref T key) {
-            skip_ws;
-            if (peek_char == '}') return false;
-            if (!atStart && next_char != ',') throw new Exception("Expected map comma");
-            atStart = false;
-            skip_ws;
-            if (!strict && peek_char == '}') return false;
-
-            string s;
-            this.outer.read_string(s);
-            key = s;
-
-            return true;
-        }
-
         override bool read_key(ref AnyValue key) {
             skip_ws;
             if (peek_char == '}') return false;
@@ -381,15 +366,11 @@ class JsonDeserializer : Deserializer {
             return true;
         }
 
-        void read_value(T)(ref T value) {
+        override void read_value(ref AnyValue value, TypeInfo typeHint) {
             skip_ws;
             this.outer.consume_char(':', "Expected map colon");
             skip_ws;
-            value.deserialize(this.outer);
-        }
-
-        override void read_value(ref AnyValue value, TypeInfo typeHint) {
-            this.read_value(value);
+            this.outer.read_any(value);
         }
 
         override void ignore_value() {
