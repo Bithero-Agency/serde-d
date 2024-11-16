@@ -159,10 +159,11 @@ void deserialize(AA, D : Deserializer)(ref AA aa, D de) if (isAssociativeArray!A
         return;
     }
 
-    K key;
-    while (access.read_key(key)) {
-        V val;
-        access.read_value(val);
+    AnyValue rawKey, rawVal;
+    while (access.read_key(rawKey)) {
+        K key = rawKey.get!K;
+        access.read_value(rawVal, typeid(V));
+        V val = rawVal.get!V;
         new_aa[key] = val;
     }
 
