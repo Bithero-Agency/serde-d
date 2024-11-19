@@ -152,12 +152,12 @@ template TypetagInternal(string tag) {
 
         auto map = de.read_map();
         InternallyTaggedDeserializer.Entry[] entries;
-        AnyValue rawKey, rawVal;
+        AnyValue rawKey;
         while (map.read_key(rawKey)) {
             auto key = rawKey.get!string;
-            rawVal.deserialize(map.read_value());
             if (key == "type") {
-                auto value = rawVal.get!string;
+                string value;
+                value.deserialize(map.read_value());
                 auto ptr = value in typetag_registry();
                 if (ptr is null) {
                     throw new Exception("could not find deserializer target");
@@ -166,6 +166,8 @@ template TypetagInternal(string tag) {
                 return;
             }
             else {
+                AnyValue rawVal;
+                rawVal.deserialize(map.read_value());
                 entries ~= InternallyTaggedDeserializer.Entry(rawVal, key);
             }
         }
