@@ -175,11 +175,10 @@ class JsonDeserializer : Deserializer {
         }
     }
 
-    void read_string(T)(ref T str) if (isSomeString!T) {
-        import std.conv;
+    override void read_string(ref string str) {
         skip_ws;
         consume_char('"', "Expected string start");
-        str = backslashUnescape(this.buffer, '"').to!T;
+        str = backslashUnescape(this.buffer, '"');
         consume_char('"', "Expected string end");
     }
 

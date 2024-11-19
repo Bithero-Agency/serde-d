@@ -44,7 +44,7 @@ import serde.value;
 abstract class Deserializer {
     void read_basic(T)(ref T value) if (isScalarType!T && !is(T == enum));
 
-    void read_string(T)(ref T str, D de) if (isSomeString!T && !is(T == enum));
+    void read_string(ref string str);
 
     void read_enum(T)(ref T value) if (is(T == enum));
 
@@ -86,7 +86,15 @@ pragma(inline) void deserialize(T, D : Deserializer)(ref T value, D de) if (isSc
 
 /// Deserializes an string
 pragma(inline) void deserialize(T, D : Deserializer)(ref T str, D de) if (isSomeString!T && !is(T == enum)) {
-    de.read_string!T(str);
+    static if (is(T == string)) {
+        de.read_string(str);
+    }
+    else {
+        string raw;
+        de.read_string(raw);
+        import std.conv : to;
+        str = raw.to!T;
+    }
 }
 
 /// Ignores an value in deserialization

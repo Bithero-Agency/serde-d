@@ -48,6 +48,10 @@ class InternallyTaggedDeserializer : Deserializer {
         this.base = base;
     }
 
+    override void read_string(ref string str) {
+        throw new SerdeException("Should not invoke read_string on InternallyTaggedDeserializer!");
+    }
+
     override void read_ignore() {
         throw new SerdeException("Should not invoke read_ignore on InternallyTaggedDeserializer!");
     }
