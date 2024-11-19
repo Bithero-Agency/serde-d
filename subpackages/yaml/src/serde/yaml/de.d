@@ -1068,9 +1068,6 @@ void fromYaml(T)(auto ref T value, ReadBuffer.Source.DgT source) {
 
 pragma(inline) T parseYaml(T)(string inp) {
     T val = T.init;
-    static if (is(T == class)) {
-        val = new T();
-    }
     val.fromYaml(inp);
     return val;
 }
