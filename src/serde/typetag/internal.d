@@ -155,7 +155,7 @@ template TypetagInternal(string tag) {
         AnyValue rawKey;
         while (map.read_key(rawKey)) {
             auto key = rawKey.get!string;
-            if (key == "type") {
+            if (key == tag) {
                 string value;
                 value.deserialize(map.read_value());
                 auto ptr = value in typetag_registry();
