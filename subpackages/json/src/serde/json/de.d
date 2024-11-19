@@ -241,7 +241,7 @@ class JsonDeserializer : Deserializer {
         }
     }
 
-    void read_any(T)(ref T value) if (isAnyValue!T) {
+    override void read_any(ref AnyValue value) {
         skip_ws;
         switch (this.buffer.front) {
             case 'n': {
@@ -285,13 +285,13 @@ class JsonDeserializer : Deserializer {
                 break;
             }
             case '[': {
-                T[] array;
+                AnyValue[] array;
                 array.deserialize(this);
                 value = array;
                 break;
             }
             case '{': {
-                T[string] map;
+                AnyValue[string] map;
                 map.deserialize(this);
                 value = map;
                 break;

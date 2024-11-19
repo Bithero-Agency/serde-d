@@ -55,7 +55,7 @@ abstract class Deserializer {
 
     void read_ignore();
 
-    void read_any(T)(ref T value) if (isAnyValue!T);
+    void read_any(ref AnyValue value);
 
     interface SeqAccess {
         Nullable!ulong size_hint();

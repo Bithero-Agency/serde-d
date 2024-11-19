@@ -75,6 +75,10 @@ class InternallyTaggedDeserializer : Deserializer {
         throw new SerdeException("Should not invoke read_ignore on InternallyTaggedDeserializer!");
     }
 
+    override void read_any(ref AnyValue value) {
+        throw new SerdeException("Should not invoke read_any on InternallyTaggedDeserializer!");
+    }
+
     override Deserializer.SeqAccess read_seq() {
         throw new SerdeException("Should not invoke read_seq on InternallyTaggedDeserializer!");
     }
