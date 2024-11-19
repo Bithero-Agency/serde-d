@@ -95,12 +95,13 @@ class InternallyTaggedDeserializer : Deserializer {
             return base.read_key(key);
         }
 
-        override void read_value(ref AnyValue value, TypeInfo typeHint) {
+        override Deserializer read_value() {
             if (entries.length > 0) {
-                value = entries[0].val;
+                auto de = new AnyValueDeserializer(entries[0].val);
                 entries = entries[1..$];
+                return de;
             } else {
-                base.read_value(value, typeHint);
+                return base.read_value();
             }
         }
 
@@ -154,8 +155,8 @@ template TypetagInternal(string tag) {
         AnyValue rawKey, rawVal;
         while (map.read_key(rawKey)) {
             auto key = rawKey.get!string;
+            rawVal.deserialize(map.read_value());
             if (key == "type") {
-                map.read_value(rawVal, typeid(string));
                 auto value = rawVal.get!string;
                 auto ptr = value in typetag_registry();
                 if (ptr is null) {
@@ -165,7 +166,6 @@ template TypetagInternal(string tag) {
                 return;
             }
             else {
-                map.read_value(rawVal, null);
                 entries ~= InternallyTaggedDeserializer.Entry(rawVal, key);
             }
         }

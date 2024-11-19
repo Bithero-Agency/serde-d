@@ -59,3 +59,57 @@ else {
     /// Check if any given type `T` is an valid "any" type.
     enum isAnyValue(alias T) = isStdVariant!T;
 }
+
+import serde.de;
+
+class AnyValueDeserializer : Deserializer {
+    AnyValue val;
+    this(ref AnyValue val) {
+        this.val = val;
+    }
+
+    override void read_bool(ref bool b) {
+        b = this.val.get!bool;
+    }
+    override void read_signed(ref long l, ubyte sz) {
+        l = this.val.get!long;
+    }
+    override void read_unsigned(ref ulong l, ubyte sz) {
+        l = this.val.get!ulong;
+    }
+    override void read_float(ref double f, ubyte sz) {
+        f = this.val.get!double;
+    }
+    override void read_real(ref real r) {
+        r = this.val.get!real;
+    }
+    override void read_char(ref dchar c) {
+        c = this.val.get!dchar;
+    }
+
+    override void read_string(ref string str) {
+        str = this.val.get!string;
+    }
+
+    override void read_ignore() {}
+
+    override void read_any(ref AnyValue value) {
+        value = this.val;
+    }
+
+    override Deserializer.SeqAccess read_seq() {
+        throw new Exception("NO SEQ");
+    }
+
+    override Deserializer.SeqAccess read_tuple() {
+        throw new Exception("NO TUP");
+    }
+
+    override Deserializer.MapAccess read_map() {
+        throw new Exception("NO MAP");
+    }
+
+    override Deserializer.MapAccess read_struct() {
+        throw new Exception("NO STRUCT");
+    }
+}

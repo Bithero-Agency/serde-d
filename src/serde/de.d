@@ -68,7 +68,7 @@ abstract class Deserializer {
     interface MapAccess {
         bool read_key(ref AnyValue value);
 
-        void read_value(ref AnyValue value, TypeInfo typeHint);
+        Deserializer read_value();
 
         void ignore_value();
 
@@ -193,8 +193,7 @@ void deserialize(AA, D : Deserializer)(ref AA aa, D de) if (isAssociativeArray!A
     AnyValue rawKey, rawVal;
     while (access.read_key(rawKey)) {
         K key = rawKey.get!K;
-        access.read_value(rawVal, typeid(V));
-        V val = rawVal.get!V;
+        V val; val.deserialize(access.read_value());
         new_aa[key] = val;
     }
 
@@ -311,7 +310,7 @@ if (
         enum name = Serde.getNameFromItem!(Field.raw, Field.name, false);
         enum index = i;
         alias type = Field.type;
-        enum code = "value." ~ Field.name ~ " = val.get!(" ~ BuildImportCodeForType!type ~ ")();";
+        enum code = "value." ~ Field.name ~ ".deserialize(val_de);";
         alias aliases = Serde.getAliases!(Field.raw);
         enum optional = Serde.isOptional!(Field.raw);
     }
@@ -320,7 +319,7 @@ if (
         enum name = Serde.getNameFromItem!(Member.raw, Member.name, false);
         enum index = i + fields.length;
         alias type = Parameters!(Member.type)[0];
-        enum code = "value." ~ Member.name ~ "( val.get!(" ~ BuildImportCodeForType!type ~ ")() );";
+        enum code = BuildImportCodeForType!type ~ " __val; __val.deserialize(val_de); value." ~ Member.name ~ "(__val);";
         alias aliases = Serde.getAliases!(Member.raw);
         enum optional = Serde.isOptional!(Member.raw);
     }
@@ -413,8 +412,7 @@ if (
                             throw new DuplicateFieldException(T.stringof, m.name);
                         }
                     }
-                    AnyValue val;
-                    access.read_value(val, typeid(m.type));
+                    auto val_de = access.read_value();
                     mixin(m.code);
                     flags[m.index] = true;
                     break Lsw;

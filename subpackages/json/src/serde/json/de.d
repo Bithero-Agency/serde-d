@@ -381,11 +381,11 @@ class JsonDeserializer : Deserializer {
             return true;
         }
 
-        override void read_value(ref AnyValue value, TypeInfo typeHint) {
+        override Deserializer read_value() {
             skip_ws;
             this.outer.consume_char(':', "Expected map colon");
             skip_ws;
-            this.outer.read_any(value);
+            return this.outer;
         }
 
         override void ignore_value() {
