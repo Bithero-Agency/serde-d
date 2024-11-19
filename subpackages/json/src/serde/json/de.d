@@ -336,19 +336,19 @@ class JsonDeserializer : Deserializer {
 
     class SeqAccess : Deserializer.SeqAccess {
         bool atStart = true;
+
         Nullable!ulong size_hint() { return Nullable!ulong(); }
-        bool read_element(T)(ref T element) {
+
+        Deserializer read_element() {
             skip_ws;
-            if (peek_char == ']') return false;
+            if (peek_char == ']') return null;
             if (!atStart && next_char != ',') throw new Exception("Expected array comma");
             atStart = false;
             skip_ws;
-            if (!strict && peek_char == ']') return false;
-
-            element.deserialize(this.outer);
-
-            return true;
+            if (!strict && peek_char == ']') return null;
+            return this.outer;
         }
+
         void end() {
             skip_ws;
             consume_char(']', "Expected array end");

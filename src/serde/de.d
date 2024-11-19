@@ -59,7 +59,9 @@ abstract class Deserializer {
 
     interface SeqAccess {
         Nullable!ulong size_hint();
-        bool read_element(T)(ref T element);
+
+        Deserializer read_element();
+
         void end();
     }
     SeqAccess read_seq();
@@ -139,8 +141,10 @@ void deserialize(T, D : Deserializer)(ref T[] array, D de) if (!isSomeString!(T[
         new_array.reserve(sz_hint.get);
     }
 
-    T entry;
-    while (access.read_element(entry)) {
+    Deserializer elem_de;
+    while ((elem_de = access.read_element()) !is null) {
+        T entry;
+        entry.deserialize(elem_de);
         new_array ~= entry;
     }
     access.end();
@@ -153,8 +157,10 @@ void deserialize(T, D : Deserializer)(ref DList!T list, D de) {
     DList!T new_list;
     auto access = de.read_seq();
 
-    T entry;
-    while (access.read_element(entry)) {
+    Deserializer elem_de;
+    while ((elem_de = access.read_element()) !is null) {
+        T entry;
+        entry.deserialize(elem_de);
         new_list ~= entry;
     }
     access.end();
@@ -167,8 +173,10 @@ void deserialize(T, D : Deserializer)(ref SList!T list, D de) {
     SList!T new_list;
     auto access = de.read_seq();
 
-    T entry;
-    while (access.read_element(entry)) {
+    Deserializer elem_de;
+    while ((elem_de = access.read_element()) !is null) {
+        T entry;
+        entry.deserialize(elem_de);
         new_list.insertAfter(new_list[], entry);
     }
     access.end();
@@ -205,7 +213,11 @@ void deserialize(T, D : Deserializer)(ref T tuple, D de) if (isInstanceOf!(StdTu
     alias Elements = T.Types;
     auto access = de.read_tuple();
     static foreach (i, E; Elements) {
-        access.read_element!E(tuple[i]);
+        {
+            auto elem_de = access.read_element();
+            assert(elem_de !is null);
+            tuple[i].deserialize(elem_de);
+        }
     }
     access.end();
 }
