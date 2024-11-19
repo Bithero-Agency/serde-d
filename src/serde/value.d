@@ -97,12 +97,36 @@ class AnyValueDeserializer : Deserializer {
         value = this.val;
     }
 
+    class SeqAccess : Deserializer.SeqAccess {
+        import std.typecons : Nullable;
+
+        AnyValue[] seq;
+        this(AnyValue[] seq) {
+            this.seq = seq;
+        }
+
+        Nullable!ulong size_hint() { return Nullable!ulong(); }
+
+        Deserializer read_element() {
+            if (seq.length > 0) {
+                auto val = seq[0];
+                seq = seq[1..$];
+                return new AnyValueDeserializer(val);
+            }
+            return null;
+        }
+
+        void end() {}
+    }
+
     override Deserializer.SeqAccess read_seq() {
-        throw new Exception("NO SEQ");
+        auto seq = this.val.get!(AnyValue[]);
+        return new SeqAccess(seq);
     }
 
     override Deserializer.SeqAccess read_tuple() {
-        throw new Exception("NO TUP");
+        auto seq = this.val.get!(AnyValue[]);
+        return new SeqAccess(seq);
     }
 
     override Deserializer.MapAccess read_map() {
