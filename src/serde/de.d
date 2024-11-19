@@ -42,7 +42,12 @@ import serde.error;
 import serde.value;
 
 abstract class Deserializer {
-    void read_basic(T)(ref T value) if (isScalarType!T && !is(T == enum));
+    void read_bool(ref bool b);
+    void read_signed(ref long l, ubyte sz);
+    void read_unsigned(ref ulong l, ubyte sz);
+    void read_float(ref double f, ubyte sz);
+    void read_real(ref real r);
+    void read_char(ref dchar c);
 
     void read_string(ref string str);
 
@@ -81,7 +86,25 @@ struct IgnoreValue {}
 
 /// Deserializes scalar types (bool, all integers, float, double, real, all char types)
 pragma(inline) void deserialize(T, D : Deserializer)(ref T value, D de) if (isScalarType!T && !is(T == enum)) {
-    de.read_basic!T(value);
+    import std.traits : isSomeChar, isUnsigned;
+    static if (__traits(isFloating, T)) {
+        double d; de.read_float(d, T.sizeof); value = cast(T) d;
+    }
+    else static if (is(T == real)) {
+        de.read_real(value);
+    }
+    else static if (is(T == bool)) {
+        de.read_bool(value);
+    }
+    else static if (isSomeChar!T) {
+        dchar ch; de.read_char(ch); value = cast(T) ch;
+    }
+    else static if (isUnsigned!T) {
+        ulong l; de.read_unsigned(l, T.sizeof); value = cast(T) l;
+    }
+    else {
+        long l; de.read_signed(l, T.sizeof); value = cast(T) l;
+    }
 }
 
 /// Deserializes an string

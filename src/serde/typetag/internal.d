@@ -48,6 +48,25 @@ class InternallyTaggedDeserializer : Deserializer {
         this.base = base;
     }
 
+    override void read_bool(ref bool b) {
+        throw new SerdeException("Should not invoke read_bool on InternallyTaggedDeserializer");
+    }
+    override void read_signed(ref long l, ubyte sz) {
+        throw new SerdeException("Should not invoke read_signed on InternallyTaggedDeserializer");
+    }
+    override void read_unsigned(ref ulong l, ubyte sz) {
+        throw new SerdeException("Should not invoke read_unsigned on InternallyTaggedDeserializer");
+    }
+    override void read_float(ref double f, ubyte sz) {
+        throw new SerdeException("Should not invoke read_float on InternallyTaggedDeserializer");
+    }
+    override void read_real(ref real r) {
+        throw new SerdeException("Should not invoke read_real on InternallyTaggedDeserializer");
+    }
+    override void read_char(ref dchar c) {
+        throw new SerdeException("Should not invoke read_char on InternallyTaggedDeserializer");
+    }
+
     override void read_string(ref string str) {
         throw new SerdeException("Should not invoke read_string on InternallyTaggedDeserializer!");
     }

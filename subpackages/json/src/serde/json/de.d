@@ -77,7 +77,7 @@ class JsonDeserializer : Deserializer {
         }
     }
 
-    void read_basic(T)(ref T value) if (is(T == bool)) {
+    override void read_bool(ref bool value) {
         skip_ws;
         if (this.buffer.startsWith("true")) {
             this.buffer.popFrontExactly(4);
@@ -92,12 +92,16 @@ class JsonDeserializer : Deserializer {
         }
     }
 
-    void read_basic(T)(ref T value) if (isFloatingPoint!T) {
+    override void read_float(ref double value, ubyte sz) {
         import std.conv : parse;
-        value = parse!T(this.buffer);
+        value = parse!double(this.buffer);
+    }
+    override void read_real(ref real value) {
+        import std.conv : parse;
+        value = parse!real(this.buffer);
     }
 
-    void read_basic(T)(ref T value) if (isScalarType!T && !is(T == bool) && !isFloatingPoint!T) {
+    private void read_basic(T)(ref T value) if (isScalarType!T && !is(T == bool) && !isFloatingPoint!T) {
         skip_ws;
 
         import std.traits : isUnsigned;
@@ -141,17 +145,29 @@ class JsonDeserializer : Deserializer {
             }
             default: {
                 static if (isSomeChar!T) {
-                    T[] str;
+                    string str;
                     this.read_string(str);
-                    if (str.length != 1) {
+                    if (str.length < 1) {
                         throw new Exception("Expected number or non-empty string");
                     }
-                    value = str[0];
+                    import std.utf : decode;
+                    size_t i = 0;
+                    value = decode(str, i);
                     return;
                 }
                 throw new Exception("Expected integer");
             }
         }
+    }
+
+    override void read_signed(ref long l, ubyte sz) {
+        this.read_basic!long(l);
+    }
+    override void read_unsigned(ref ulong l, ubyte sz) {
+        this.read_basic!ulong(l);
+    }
+    override void read_char(ref dchar c) {
+        this.read_basic!dchar(c);
     }
 
     unittest {
@@ -165,7 +181,7 @@ class JsonDeserializer : Deserializer {
             dchar ch = 0;
             try {
                 auto de = new JsonDeserializer(inp);
-                de.read_basic(ch);
+                de.read_char(ch);
                 assert(de.buffer.empty, "Failed parsing '" ~ inp ~ "'; still data left in buffer");
             }
             catch (Exception e) {
@@ -195,14 +211,14 @@ class JsonDeserializer : Deserializer {
         switch (peek_char) {
             case 'n': { read_null(); break; }
             case 't': case 'f': {
-                bool b; read_basic(b); break;
+                bool b; read_bool(b); break;
             }
             case '"': {
                 string str; read_string(str); break;
             }
             case '0': .. case '9':
             case '-': {
-                double d; this.read_basic(d); break;
+                double d; this.read_float(d, double.sizeof); break;
             }
             case '[': case '{': {
                 char[] stack;
@@ -235,7 +251,7 @@ class JsonDeserializer : Deserializer {
             }
             case 't': case 'f': {
                 bool b;
-                read_basic(b);
+                read_bool(b);
                 value = b;
                 break;
             }
@@ -249,7 +265,7 @@ class JsonDeserializer : Deserializer {
             case '-':
             {
                 double d;
-                this.read_basic(d);
+                this.read_float(d, double.sizeof);
                 if (cast(long) d == d) {
                     // is a non-floating point number
                     auto l = cast(long) d;
