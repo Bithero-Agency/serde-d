@@ -293,7 +293,7 @@ class JsonDeserializer : Deserializer {
             case '{': {
                 AnyValue[string] map;
                 map.deserialize(this);
-                value = map;
+                value = AnyMap(map);
                 break;
             }
             default: {
@@ -405,6 +405,10 @@ class JsonDeserializer : Deserializer {
         skip_ws;
         this.consume_char('{', "Expected map start");
         return new MapAccess();
+    }
+
+    unittest {
+        assert(`{"aa":12}`.parseJson!(int[string]) == ["aa":12]);
     }
 
     override MapAccess read_struct() {

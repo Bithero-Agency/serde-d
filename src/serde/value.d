@@ -129,11 +129,97 @@ class AnyValueDeserializer : Deserializer {
         return new SeqAccess(seq);
     }
 
+    class MapAccess : Deserializer.MapAccess {
+        AnyMap map;
+        this(ref AnyMap map) {
+            this.map = map;
+        }
+
+        bool read_key(ref AnyValue key) {
+            if (map.entries.length > 0) {
+                key = map.entries[0].key;
+                return true;
+            }
+            return false;
+        }
+
+        Deserializer read_value() {
+            if (map.entries.length > 0) {
+                auto de = new AnyValueDeserializer(map.entries[0].val);
+                map.entries = map.entries[1..$];
+                return de;
+            }
+            return null;
+        }
+
+        void ignore_value() {
+            if (map.entries.length > 0) {
+                map.entries = map.entries[1..$];
+            }
+        }
+
+        void end() {}
+    }
+
     override Deserializer.MapAccess read_map() {
-        throw new Exception("NO MAP");
+        auto map = this.val.get!(AnyMap);
+        return new MapAccess(map);
     }
 
     override Deserializer.MapAccess read_struct() {
-        throw new Exception("NO STRUCT");
+        auto map = this.val.get!(AnyMap);
+        return new MapAccess(map);
+    }
+}
+
+struct AnyMap {
+    static struct Entry {
+        AnyValue key;
+        AnyValue val;
+    }
+    Entry[] entries;
+
+    this(K, V)(V[K] map) {
+        foreach (ref k, v; map) {
+            static if (is(K == AnyValue) && is(V == AnyValue)) {
+                entries ~= Entry(k, v);
+            }
+            else static if (is(K == AnyValue)) {
+                entries ~= Entry(k, AnyValue(v));
+            }
+            else static if (is(V == AnyValue)) {
+                entries ~= Entry(AnyValue(k), v);
+            }
+            else {
+                entries ~= Entry(AnyValue(k), AnyValue(v));
+            }
+        }
+    }
+
+    private Entry* findEntry(ref AnyValue key) {
+        foreach (ref e; entries) {
+            if (e == key) {
+                return &e;
+            }
+        }
+        return null;
+    }
+
+    ref auto opIndex(I)(I index) {
+        auto e = findEntry(index);
+        if (e is null) {
+            throw new Exception("Out of bounds!");
+        }
+        return e.val;
+    }
+
+    auto opIndexAssign(T, I)(T value, I index) {
+        auto e = findEntry(index);
+        if (e !is null) {
+            e.val = value;
+        } else {
+            entries ~= Entry(index, value);
+        }
+        return value;
     }
 }
