@@ -27,6 +27,7 @@ module serde.yaml.de;
 
 import serde.de;
 import serde.common;
+import serde.value;
 import serde.yaml.error;
 
 import std.traits : isScalarType, isFloatingPoint, isSomeString, isSomeChar;
@@ -311,7 +312,7 @@ class YamlDeserializer : Deserializer {
         }
     }
 
-    void read_basic(T)(ref T value) if (is(T == bool)) {
+    override void read_bool(ref bool value) {
         auto tag = this.read_tag();
         // TODO: use the tag somehow...
 
@@ -356,7 +357,7 @@ class YamlDeserializer : Deserializer {
         foreach (s, r; testCases) {
             bool b = !r;
             try {
-                (new YamlDeserializer(s)).read_basic(b);
+                (new YamlDeserializer(s)).read_bool(b);
             }
             catch (YamlParsingException e) {
                 assert(0, "Failed parsing '" ~ s ~ "'; got YamlParsingException");
@@ -366,16 +367,16 @@ class YamlDeserializer : Deserializer {
 
         try {
             bool b;
-            (new YamlDeserializer("z").read_basic(b));
-            assert(0, "Failed parsing read_basic!bool with invalid data; expected YamlParsingException but none");
+            (new YamlDeserializer("z").read_bool(b));
+            assert(0, "Failed parsing read_bool with invalid data; expected YamlParsingException but none");
         }
         catch (YamlParsingException e) {}
         catch (Throwable e) {
-            assert(0, "Failed parsing read_basic!bool with invalid data; expected YamlParsingException but got: " ~ e.toString());
+            assert(0, "Failed parsing read_bool with invalid data; expected YamlParsingException but got: " ~ e.toString());
         }
     }
 
-    void read_basic(T)(ref T value) if (isFloatingPoint!T) {
+    private void read_basic(T)(ref T value) if (isFloatingPoint!T) {
         auto tag = this.read_tag();
         // TODO: use the tag somehow...
 
@@ -417,7 +418,14 @@ class YamlDeserializer : Deserializer {
             throw new YamlParsingException("Expected floatingpoint value, '-.inf', '.inf' or '.nan'");
     }
 
-    void read_basic(T)(ref T value) if (isScalarType!T && !is(T == bool) && !isFloatingPoint!T) {
+    override void read_float(ref double value, ubyte sz) {
+        this.read_basic!double(value);
+    }
+    override void read_real(ref real value) {
+        this.read_basic!real(value);
+    }
+
+    private void read_basic(T)(ref T value) if (isScalarType!T && !is(T == bool) && !isFloatingPoint!T) {
         auto tag = this.read_tag();
         // TODO: use the tag somehow...
         static if (isSomeChar!T) {
@@ -426,6 +434,16 @@ class YamlDeserializer : Deserializer {
         } else {
             value = this.buffer.readInt!T(true);
         }
+    }
+
+    override void read_signed(ref long l, ubyte sz) {
+        this.read_basic!long(l);
+    }
+    override void read_unsigned(ref ulong l, ubyte sz) {
+        this.read_basic!ulong(l);
+    }
+    override void read_char(ref dchar c) {
+        this.read_basic!dchar(c);
     }
 
     // Test float parsing
@@ -442,7 +460,7 @@ class YamlDeserializer : Deserializer {
             float f = 0;
             try {
                 auto de = new YamlDeserializer(inp);
-                de.read_basic(f);
+                f.deserialize(de);
                 assert(de.buffer.empty, "Failed parsing '" ~ inp ~ "'; still data left in buffer");
             }
             catch (YamlParsingException e) {
@@ -458,7 +476,8 @@ class YamlDeserializer : Deserializer {
         foreach (inp; ["-inf", "inf", "z"]) {
             try {
                 float f;
-                (new YamlDeserializer(inp)).read_basic(f);
+                auto de = new YamlDeserializer(inp);
+                f.deserialize(de);
                 assert(0, "Failed parsing '" ~ inp ~ "'; expected YamlParsingException but got none");
             }
             catch (YamlParsingException e) {}
@@ -480,7 +499,7 @@ class YamlDeserializer : Deserializer {
             int i = 0;
             try {
                 auto de = new YamlDeserializer(inp);
-                de.read_basic(i);
+                i.deserialize(de);
                 assert(de.buffer.empty, "Failed parsing '" ~ inp ~ "'; still data left in buffer");
             }
             catch (Exception e) {
@@ -500,7 +519,7 @@ class YamlDeserializer : Deserializer {
             dchar ch = 0;
             try {
                 auto de = new YamlDeserializer(inp);
-                de.read_basic(ch);
+                ch.deserialize(de);
                 assert(de.buffer.empty, "Failed parsing '" ~ inp ~ "'; still data left in buffer");
             }
             catch (Exception e) {
@@ -544,7 +563,7 @@ class YamlDeserializer : Deserializer {
         this.buffer.popFront();
     }
 
-    void read_string(T)(ref T str) if (isSomeString!T) {
+    override void read_string(ref string str) {
         auto tag = this.read_tag();
         // TODO: use the tag somehow...
         // TODO: what to do when nothing could be parsed?
@@ -750,6 +769,10 @@ class YamlDeserializer : Deserializer {
         throw new YamlParsingException("read_ignore is NIY!");
     }
 
+    override void read_any(ref AnyValue value) {
+        throw new YamlParsingException("read_any is NIY!");
+    }
+
     void read_enum(T)(ref T value) if (is(T == enum)) {
         string val;
         this.read_string(val);
@@ -777,7 +800,7 @@ class YamlDeserializer : Deserializer {
         }
     }
 
-    class SeqAccess {
+    class SeqAccess : Deserializer.SeqAccess {
         private {
             Context returnTo;
             bool atStart = true;
@@ -789,33 +812,29 @@ class YamlDeserializer : Deserializer {
 
         Nullable!ulong size_hint() { return Nullable!ulong(); }
 
-        bool read_element(T)(ref T element) {
+        Deserializer read_element() {
             buffer.skipWhitespace();
 
             bool isFlowStyle = ctx == Context.FlowIn;
             if (isFlowStyle) {
-                if (buffer.front == ']') return false;
+                if (buffer.front == ']') return null;
                 if (!atStart) {
                     if (buffer.front != ',') throw new YamlParsingException("Expected flow-style collection seperator");
                     buffer.popFront();
                 }
                 atStart = false;
                 buffer.skipWhitespace();
-                if (buffer.front == ']') return false;
-
-                element.deserialize(this.outer);
-
-                return true;
+                if (buffer.front == ']') return null;
+                return this.outer;
             }
             else {
-                if (!buffer.startsWith("- ")) return false;
+                if (!buffer.startsWith("- ")) return null;
                 buffer.popFront();
                 buffer.popFront();
-                element.deserialize(this.outer);
-                return true;
+                return this.outer;
             }
 
-            return false;
+            return null;
         }
 
         void end() {
@@ -827,7 +846,7 @@ class YamlDeserializer : Deserializer {
         }
     }
 
-    SeqAccess read_seq(T)() {
+    override SeqAccess read_seq() {
         auto tag = this.read_tag();
         // TODO: use the tag somehow...
 
@@ -853,17 +872,7 @@ class YamlDeserializer : Deserializer {
             int[] seq;
             try {
                 auto de = new YamlDeserializer(inp);
-
-                auto access = de.read_seq!int();
-                assert(access !is null, "Failed parsing '" ~ inp ~ "'; got no SeqAccess");
-
-                int elem;
-                while (access.read_element(elem)) {
-                    seq ~= elem;
-                }
-
-                access.end();
-
+                seq.deserialize(de);
                 assert(de.buffer.empty, "Failed parsing '" ~ inp ~ "'; still data left in buffer");
             }
             catch (Exception e) {
@@ -873,7 +882,7 @@ class YamlDeserializer : Deserializer {
         }
     }
 
-    SeqAccess read_tuple(Elements...)() {
+    override SeqAccess read_tuple() {
         auto tag = this.read_tag();
         // TODO: use the tag somehow...
 
@@ -903,7 +912,7 @@ class YamlDeserializer : Deserializer {
             this.oldLvl = lvl;
         }
 
-        bool read_key(T)(ref T key) {
+        bool read_key(ref AnyValue key) {
             ctx = isBlock ? Context.BlockKey : Context.FlowKey;
 
             if (isBlock) {
@@ -950,7 +959,7 @@ class YamlDeserializer : Deserializer {
             return false;
         }
 
-        void read_value(T)(ref T value) {
+        Deserializer read_value() {
             dchar ch;
 
             ctx = isBlock ? Context.BlockIn : Context.FlowIn;
@@ -963,11 +972,14 @@ class YamlDeserializer : Deserializer {
             if (ch != ' ' && ch != '\n' && ch != '\r') goto Lerr;
             buffer.popFront();
 
-            value.deserialize(this.outer);
-            return;
+            return this.outer;
 
             Lerr:
                 throw new YamlParsingException("Expected mapping key-value seperator");
+        }
+
+        void ignore_value() {
+            this.read_value().read_ignore();
         }
 
         void end() {
@@ -980,7 +992,7 @@ class YamlDeserializer : Deserializer {
         }
     }
 
-    MapAccess read_map(K, V)() {
+    override MapAccess read_map() {
         auto tag = this.read_tag();
         // TODO: use the tag somehow...
 
@@ -1004,19 +1016,7 @@ class YamlDeserializer : Deserializer {
             int[string] map;
             try {
                 auto de = new YamlDeserializer(inp);
-
-                auto access = de.read_map!(string, int)();
-                assert(access !is null, "Failed parsing '" ~ inp ~ "'; got no MapAccess");
-
-                string key;
-                while (access.read_key(key)) {
-                    int val;
-                    access.read_value(val);
-                    map[key] = val;
-                }
-
-                access.end();
-
+                map.deserialize(de);
                 assert(de.buffer.empty, "Failed parsing '" ~ inp ~ "'; still data left in buffer");
             }
             catch (Exception e) {
