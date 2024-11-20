@@ -146,7 +146,7 @@ template TypetagInternal(string tag) {
 
     mixin serde.typetag.TypetagBase!();
 
-    static void deserializeInstance(D : serde.de.Deserializer)(ref typeof(this) a, D de) {
+    static void deserializeInstance(ref typeof(this) a, serde.de.Deserializer de) {
         import serde : AnyValue;
         import serde.typetag;
 

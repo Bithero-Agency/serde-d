@@ -87,7 +87,7 @@ abstract class Deserializer {
 struct IgnoreValue {}
 
 /// Deserializes scalar types (bool, all integers, float, double, real, all char types)
-pragma(inline) void deserialize(T, D : Deserializer)(ref T value, D de) if (isScalarType!T && !is(T == enum)) {
+pragma(inline) void deserialize(T)(ref T value, Deserializer de) if (isScalarType!T && !is(T == enum)) {
     import std.traits : isSomeChar, isUnsigned;
     static if (__traits(isFloating, T)) {
         double d; de.read_float(d, T.sizeof); value = cast(T) d;
@@ -110,7 +110,7 @@ pragma(inline) void deserialize(T, D : Deserializer)(ref T value, D de) if (isSc
 }
 
 /// Deserializes an string
-pragma(inline) void deserialize(T, D : Deserializer)(ref T str, D de) if (isSomeString!T && !is(T == enum)) {
+pragma(inline) void deserialize(T)(ref T str, Deserializer de) if (isSomeString!T && !is(T == enum)) {
     static if (is(T == string)) {
         de.read_string(str);
     }
@@ -123,16 +123,16 @@ pragma(inline) void deserialize(T, D : Deserializer)(ref T str, D de) if (isSome
 }
 
 /// Ignores an value in deserialization
-pragma(inline) void deserialize(D : Deserializer)(auto ref IgnoreValue v, D de) {
+pragma(inline) void deserialize()(auto ref IgnoreValue v, Deserializer de) {
     de.read_ignore();
 }
 
-pragma(inline) void deserialize(T, D : Deserializer)(ref T value, D de) if(is(T == enum)) {
+pragma(inline) void deserialize(T)(ref T value, Deserializer de) if(is(T == enum)) {
     de.read_enum(value);
 }
 
 /// Deserializes an array
-void deserialize(T, D : Deserializer)(ref T[] array, D de) if (!isSomeString!(T[])) {
+void deserialize(T)(ref T[] array, Deserializer de) if (!isSomeString!(T[])) {
     T[] new_array;
     auto access = de.read_seq();
 
@@ -153,7 +153,7 @@ void deserialize(T, D : Deserializer)(ref T[] array, D de) if (!isSomeString!(T[
 }
 
 /// Deserializes an libphobos double-linked list
-void deserialize(T, D : Deserializer)(ref DList!T list, D de) {
+void deserialize(T)(ref DList!T list, Deserializer de) {
     DList!T new_list;
     auto access = de.read_seq();
 
@@ -169,7 +169,7 @@ void deserialize(T, D : Deserializer)(ref DList!T list, D de) {
 }
 
 /// Deserializes an libphobos single-linked list
-void deserialize(T, D : Deserializer)(ref SList!T list, D de) {
+void deserialize(T)(ref SList!T list, Deserializer de) {
     SList!T new_list;
     auto access = de.read_seq();
 
@@ -185,7 +185,7 @@ void deserialize(T, D : Deserializer)(ref SList!T list, D de) {
 }
 
 /// Deserializes an associative array
-void deserialize(AA, D : Deserializer)(ref AA aa, D de) if (isAssociativeArray!AA && !is(AA == enum)) {
+void deserialize(AA)(ref AA aa, Deserializer de) if (isAssociativeArray!AA && !is(AA == enum)) {
     alias K = KeyType!AA;
     alias V = ValueType!AA;
 
@@ -209,7 +209,7 @@ void deserialize(AA, D : Deserializer)(ref AA aa, D de) if (isAssociativeArray!A
 }
 
 /// Deserializes an libphobos tuple
-void deserialize(T, D : Deserializer)(ref T tuple, D de) if (isInstanceOf!(StdTuple, T)) {
+void deserialize(T)(ref T tuple, Deserializer de) if (isInstanceOf!(StdTuple, T)) {
     alias Elements = T.Types;
     auto access = de.read_tuple();
     static foreach (i, E; Elements) {
@@ -225,7 +225,7 @@ void deserialize(T, D : Deserializer)(ref T tuple, D de) if (isInstanceOf!(StdTu
 /// Deserializes an "any" value;
 /// This can be either an instance of libphobos `std.variant.VariantN`,
 /// or alternatively, one of `ninox.std.variant.Variant`.
-void deserialize(T, D : Deserializer)(ref T var, D de) if (isAnyValue!T) {
+void deserialize(T)(ref T var, Deserializer de) if (isAnyValue!T) {
     de.read_any(var);
 }
 
@@ -237,7 +237,7 @@ private enum isSpecialStructOrClass(T) = (
     || isAnyValue!T
 );
 
-void deserialize(T, D : Deserializer)(ref T value, D de)
+void deserialize(T)(ref T value, Deserializer de)
 if (
     (is(T == struct) || is(T == class))
     && !is(T == enum)
@@ -247,7 +247,7 @@ if (
     T.deserializeInstance(value, de);
 }
 
-void deserialize(T, D : Deserializer)(ref T value, D de)
+void deserialize(T)(ref T value, Deserializer de)
 if (
     (is(T == struct) || is(T == class))
     && !is(T == enum)
