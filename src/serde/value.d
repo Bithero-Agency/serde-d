@@ -198,7 +198,7 @@ struct AnyMap {
 
     private Entry* findEntry(ref AnyValue key) {
         foreach (ref e; entries) {
-            if (e == key) {
+            if (e.key == key) {
                 return &e;
             }
         }
@@ -206,7 +206,12 @@ struct AnyMap {
     }
 
     ref auto opIndex(I)(I index) {
-        auto e = findEntry(index);
+        static if (is(I == AnyValue)) {
+            auto e = findEntry(index);
+        } else {
+            AnyValue idx = index;
+            auto e = findEntry(idx);
+        }
         if (e is null) {
             throw new Exception("Out of bounds!");
         }
@@ -214,12 +219,65 @@ struct AnyMap {
     }
 
     auto opIndexAssign(T, I)(T value, I index) {
-        auto e = findEntry(index);
+        static if (is(I == AnyValue)) {
+            auto e = findEntry(index);
+        } else {
+            AnyValue idx = index;
+            auto e = findEntry(idx);
+        }
         if (e !is null) {
             e.val = value;
         } else {
-            entries ~= Entry(index, value);
+            static if (is(I == AnyValue) && is(T == AnyValue)) {
+                entries ~= Entry(index, value);
+            }
+            else static if (is(I == AnyValue)) {
+                entries ~= Entry(index, AnyValue(value));
+            }
+            else static if (is(T == AnyValue)) {
+                entries ~= Entry(idx, value);
+            }
+            else {
+                entries ~= Entry(idx, AnyValue(value));
+            }
         }
         return value;
     }
+
+    auto opBinary(string op : "in", R)(const R index) {
+        static if (is(I == AnyValue)) {
+            auto e = findEntry(index);
+        } else {
+            AnyValue idx = index;
+            auto e = findEntry(idx);
+        }
+        if (e is null) return null;
+        return &(e.val);
+    }
+
+    auto opBinaryRight(string op : "in", R)(const R index) {
+        static if (is(I == AnyValue)) {
+            auto e = findEntry(index);
+        } else {
+            AnyValue idx = index;
+            auto e = findEntry(idx);
+        }
+        if (e is null) return null;
+        return &(e.val);
+    }
+}
+
+unittest {
+    AnyMap map;
+    map[AnyValue("abc")] = 12;
+
+    auto k = AnyValue("abc");
+    assert(map.findEntry(k) !is null);
+
+    assert(map["abc"] == 12);
+
+    assert(("abc" in map) !is null);
+    assert(*("abc" in map) == 12);
+
+    assert("def" !in map);
 }
