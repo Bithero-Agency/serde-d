@@ -98,7 +98,7 @@ private auto isNsPlainSafe(dchar ch, Context ctx) {
         case Context.FlowIn: return ch.isNsPlainSafeIn;
         case Context.BlockKey: return ch.isNsPlainSafeOut;
         case Context.FlowKey: return ch.isNsPlainSafeIn;
-        default: return false;
+        default: return ch.isNsPlainSafeOut;
     }
 }
 
@@ -114,7 +114,7 @@ class YamlDeserializer : Deserializer {
     string[string] tagHandles;
     ReadBuffer buffer;
 
-    Context ctx;
+    Context ctx = Context.BlockIn;
     long lvl = 0;
     long lineIndent = 0;
 
@@ -696,10 +696,9 @@ class YamlDeserializer : Deserializer {
                     this.buffer.popFront();
                     continue;
                 }
-                if (!this.buffer.hasNext) break;
 
                 if (
-                    (ch == ':' && this.buffer.peek.isNsPlainSafe(ctx))
+                    (ch == ':' && this.buffer.hasNext && this.buffer.peek.isNsPlainSafe(ctx))
                     || (ch == '#' && !str[$-1].isWhite)
                 ) {
                     str ~= ch;

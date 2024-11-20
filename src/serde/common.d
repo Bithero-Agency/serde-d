@@ -367,7 +367,7 @@ public:
     /// Returns: true if the buffer is not empty after the next call to `popFront`.
     @property bool hasNext() {
         this.fillIfNeeded(false);
-        return (this.pos + 1) >= this.len;
+        return (this.pos + 1) < this.len;
     }
 
     /// Gets the current char in the buffer
