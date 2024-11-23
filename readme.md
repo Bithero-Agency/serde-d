@@ -54,7 +54,7 @@ struct MyObj {
 }
 ```
 
-> Note: for more infromation how to paragmatically use the serializer, see `documentation/types.md` and `documentation/serializers.md`.
+> Note: for more infromation how to paragmatically use the serializer (including `serializeInstance`), see `documentation/types.md` and `documentation/serializers.md`.
 
 ### Attributes
 

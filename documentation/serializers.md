@@ -71,3 +71,15 @@ Each of the types the framework defines is mapped to one specific set of methods
   After that, you can use the returned value that implements `Serializer.Struct` to write as many fields as you like by calling `Serializer write_field(string name)`. Like before, use the returned serializer to write the field's value.
 
   And like with sequences, tuples or maps, you'll need to finish it off with an call to `end()`; the same note about dropping is applied here as well.
+
+### Custom serialization
+
+It is possible to provide custom serialization-code for user-defined types like `struct`'s and `class`'es.
+
+To do this, there are two methods that are called by the framework:
+
+- `void serialize(Serializer ser);` and
+
+- `static void serializeInstance(ref typeof(this) instance, Serializer ser);`
+
+> Note: The automatic serialize method provided by the framework is only available if none of the above could be found inside the class / struct.
