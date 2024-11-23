@@ -144,3 +144,44 @@ void main() {
 ```
 
 > Note: The order in which the tag and the value are parsed is irrelevant, they only need to be the only keys inside the map.
+
+## Tuple
+
+The tuple format puts the tag and value inside a tuple, where the tag will be placed at index 0 and the value at index 1:
+
+```d
+import std.stdio;
+import serde.json;
+import serde.typetag;
+
+interface Auth {
+    mixin TypetagTuple!();
+}
+
+class BasicAuth : Auth {
+    string user;
+    this(string user) { this.user = user; }
+
+    mixin RegisterTypetag!(Auth, "basic");
+}
+
+void main() {
+    Auth a = new BasicAuth("foo");
+    writeln( a.toJson );
+
+    auto a = fromJson!Auth( a.toJson );
+    assert(cast(BasicAuth) a !is null);
+}
+```
+
+```json
+[
+    // this is the tag!
+    "basic",
+
+    // this is the value!
+    { "user": "foo", /* ... */ },
+]
+```
+
+> Note: The order is important here; the tag **must** be the first element, directly followed by the value. After the value cannot follow any more values.

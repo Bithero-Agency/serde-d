@@ -28,6 +28,7 @@ module serde.typetag;
 public import serde.typetag.adjacent;
 public import serde.typetag.external;
 public import serde.typetag.internal;
+public import serde.typetag.tuple;
 
 /// Must be placed **inside** a baseclass or interface.
 /// 
