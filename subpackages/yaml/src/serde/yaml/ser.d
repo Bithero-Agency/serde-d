@@ -189,7 +189,7 @@ class YamlSerializer : Serializer {
             sink("]");
         }
     }
-    Tuple start_tuple(Elements...)() {
+    override Tuple start_tuple() {
         sink("[");
         return new Tuple();
     }

@@ -77,9 +77,8 @@ abstract class Serializer {
         void end();
     }
 
-    /// Starts an tuple, where `Elements` is an type-tuple of all the types the tuple consist of, in order.
-    /// Effectively, this is libphobos `std.typecons.Tuple`'s `.Type` member.
-    Tuple start_tuple(Elements...)();
+    /// Starts an tuple.
+    Tuple start_tuple();
 
     /// Maps are key-value pairs
     interface Map {
@@ -192,7 +191,7 @@ void serialize(AA, S : Serializer)(auto ref AA aa, S ser) if (isAssociativeArray
 /// Serializes an libphobos tuple
 void serialize(T, S : Serializer)(auto ref T tuple, S ser) if (isInstanceOf!(StdTuple, T)) {
     alias Elements = T.Types;
-    auto t = ser.start_tuple!Elements();
+    auto t = ser.start_tuple();
     static foreach (i, E; Elements) {
         t.write_element!E(tuple[i]);
     }

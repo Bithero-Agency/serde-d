@@ -132,7 +132,7 @@ class JsonSerializer : Serializer {
             write(']');
         }
     }
-    Tuple start_tuple(Elements...)() {
+    override Tuple start_tuple() {
         write('[');
         _lvl++;
         return new Tuple();
