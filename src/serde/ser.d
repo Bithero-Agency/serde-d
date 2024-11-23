@@ -286,6 +286,7 @@ if (
     );
     enum isGetter(alias Member) = (
         Member.compiles
+        && !Serde.isSkipped!(Member.raw)
         && (
             (isFunction!(Member.raw) && Member.has_UDA!(Serde.Getter))
             || (
