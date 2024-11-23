@@ -110,9 +110,9 @@ if (isInputRange!R)
 
                 case 'u': {
                     c = inp.front(); inp.popFront();
-                    if (c != '0') throw new Exception("Unescape error: expected '0' after '\\u'");
+                    if (c != '0') throw new SerdeException("Unescape error: expected '0' after '\\u'");
                     c = inp.front(); inp.popFront();
-                    if (c != '0') throw new Exception("Unescape error: expected '0' after '\\u0'");
+                    if (c != '0') throw new SerdeException("Unescape error: expected '0' after '\\u0'");
 
                     ubyte[2] spl;
                     c = inp.front(); inp.popFront();
@@ -126,7 +126,7 @@ if (isInputRange!R)
                 }
 
                 default:
-                    throw new Exception("Invalid escape sequence: \\" ~ c.to!string);
+                    throw new SerdeException("Invalid escape sequence: \\" ~ c.to!string);
             }
         } else {
             inp.popFront();
@@ -336,13 +336,13 @@ public:
     /// Fills up the internal buffer
     private void fill(bool handleEOF = true) {
         if (!this.source) {
-            if (handleEOF) throw new Exception("End of file reached");
+            if (handleEOF) throw new SerdeException("End of file reached");
             return;
         }
 
         this.len = this.source(this.data, BufferSize);
         if (handleEOF && this.len < 1) {
-            throw new Exception("End of file reached");
+            throw new SerdeException("End of file reached");
         }
         this.pos = 0;
     }
@@ -428,7 +428,7 @@ if (is(T == enum))
 
     // Enums with an AA as backing type have some problems when trying to convert them to an string.
     // So, we just cast anything explicitly to the original type, so that we can actually get what we're looking for.
-    throw new Exception("Could not lookup enum value " ~ (cast(OriginalType!T) value).to!string ~ " for type " ~ T.stringof);
+    throw new SerdeException("Could not lookup enum value " ~ (cast(OriginalType!T) value).to!string ~ " for type " ~ T.stringof);
 }
 
 string getEnumKeyName(T)(ref T value, ulong index) if (is(T == enum)) {

@@ -27,6 +27,8 @@
  */
 module serde.value;
 
+import serde.error;
+
 import std.variant : VariantN;
 import std.traits : isInstanceOf;
 
@@ -220,7 +222,7 @@ struct AnyMap {
             auto e = findEntry(idx);
         }
         if (e is null) {
-            throw new Exception("Out of bounds!");
+            throw new SerdeException("Out of bounds!");
         }
         return e.val;
     }
