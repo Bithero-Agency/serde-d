@@ -38,6 +38,12 @@ template TypetagBase() {
         static deserializeFn[string] reg;
         return reg;
     }
+
+    string typetag_name();
+
+    static import serde.ser;
+
+    void typetag_serialize(serde.ser.Serializer.Struct s);
 }
 
 /// Must be placed **inside** a decendant class.
@@ -56,5 +62,16 @@ template RegisterTypetag(alias BaseType, string name)
         auto ptr = name in BaseType.typetag_registry();
         assert(ptr is null);
         BaseType.typetag_registry()[name] = &doDeserialize;
+    }
+
+    override string typetag_name() {
+        return name;
+    }
+
+    static import serde.ser, serde.attrs;
+
+    @(serde.attrs.SerdeSkip)
+    override void typetag_serialize(serde.ser.Serializer.Struct s) {
+        this.serializeInto(s);
     }
 }

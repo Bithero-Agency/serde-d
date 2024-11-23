@@ -177,4 +177,11 @@ template TypetagInternal(string tag) {
         }
         throw new Exception("Could not find any type key...");
     }
+
+    static void serializeInstance(ref typeof(this) instance, serde.ser.Serializer se) {
+        auto s = se.start_struct();
+        instance.typetag_name().serialize( s.write_field(tag) );
+        instance.typetag_serialize(s);
+        s.end();
+    }
 }
