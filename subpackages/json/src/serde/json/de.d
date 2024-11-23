@@ -155,7 +155,9 @@ class JsonDeserializer : Deserializer {
                     value = decode(str, i);
                     return;
                 }
-                throw new Exception("Expected integer");
+                else {
+                    throw new Exception("Expected integer");
+                }
             }
         }
     }
