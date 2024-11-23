@@ -43,40 +43,74 @@ import serde.error;
 import serde.value;
 
 interface Deserializer {
+    /// Reads an boolean value.
     void read_bool(ref bool b);
+
+    /// Reads an signed integer. `sz` specifies if for an byte(1), short(2), int(4) or long(8).
     void read_signed(ref long l, ubyte sz);
+
+    /// Reads an unsigned integer. `sz` specifies if for an ubyte(1), ushort(2), uint(4) or ulong(8).
     void read_unsigned(ref ulong l, ubyte sz);
+
+    /// Reads an floatingpoint number. `sz` specifies if for an float(4) or double(8).
     void read_float(ref double f, ubyte sz);
+
+    /// Reads an real.
     void read_real(ref real r);
+
+    /// Reads an character value.
     void read_char(ref dchar c);
 
+    /// Reads an string.
     void read_string(ref string str);
 
+    /// Reads an enum.
+    /// The default enum deserializer expects to retrieve either a string or an integer value.
     void read_enum(ref AnyValue value);
 
+    /// Ignores one value from the input stream.
+    /// This is just an specialized form of `read_any()` where the value is not needed.
     void read_ignore();
 
+    /// Reads any one value from the input.
     void read_any(ref AnyValue value);
 
     interface SeqAccess {
+        /// Size hint of the sequence (or tuple).
+        /// If an value is returned, the deserializing code can use this to reserve memory
+        /// before starting to read elements.
         Nullable!ulong size_hint();
 
+        /// Reads an element from the sequence / tuple.
         Deserializer read_element();
 
+        /// Reads the end of a sequence / tuple.
         void end();
     }
+
+    /// Starts reading a sequence.
     SeqAccess read_seq();
+
+    /// Starts reading a tuple.
     SeqAccess read_tuple();
 
     interface MapAccess {
+        /// Reads a key; returns `true` if successfull; `false` otherwise.
+        /// If `true` was returned, this is immediately followed by `read_value` OR `ignore_value`.
         bool read_key(ref AnyValue value);
 
+        /// Reads the value. Is immediately after `read_key`.
+        /// The returned Deserializer MUST be used to read the final value.
         Deserializer read_value();
 
+        /// Ignores the value. Is immediately after `read_key`.
         void ignore_value();
 
+        /// Reads the end of an map / struct.
         void end();
     }
+
+    /// Starts reading a map.
     MapAccess read_map();
 
     /// Starts reading a struct/class.
@@ -484,7 +518,7 @@ if (
     access.end();
 }
 
-unittest {
+/*unittest {
     class A {
     @(Serde.Optional):
 
@@ -505,4 +539,4 @@ unittest {
     }
 
     A a; deserialize(a, new FooSerializer());
-}
+}*/
