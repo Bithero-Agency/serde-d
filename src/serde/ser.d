@@ -93,11 +93,11 @@ abstract class Serializer {
         void end();
     }
 
-    /// Starts an map with unknown length. `K` is the key-type and `V` is the value type.
-    Map start_map(K, V)();
+    /// Starts an map with unknown length.
+    Map start_map();
 
-    /// Starts an map with an known length. `K` is the key-type and `V` is the value type.
-    Map start_map(K, V)(ulong length);
+    /// Starts an map with an known length.
+    Map start_map(ulong length);
 
     /// Structs are... well structs
     interface Struct {
@@ -181,7 +181,7 @@ void serialize(R, S : Serializer)(auto ref R range, S ser) if (isInputRange!R &&
 void serialize(AA, S : Serializer)(auto ref AA aa, S ser) if (isAssociativeArray!AA && !is(AA == enum)) {
     alias K = KeyType!AA;
     alias V = ValueType!AA;
-    auto m = ser.start_map!(K, V)(aa.length);
+    auto m = ser.start_map(aa.length);
     foreach (ref k, ref v; aa) {
         m.write_key(k);
         m.write_value(v);

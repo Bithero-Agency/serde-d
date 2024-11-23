@@ -214,12 +214,12 @@ class YamlSerializer : Serializer {
             _lvl--;
         }
     }
-    Map start_map(K, V)() {
+    override Map start_map() {
         if (_lvl >= 0) sink("\n");
         _lvl++;
         return new Map();
     }
-    Map start_map(K, V)(ulong length) {
+    override Map start_map(ulong length) {
         if (_lvl >= 0) sink("\n");
         _lvl++;
         return new Map();

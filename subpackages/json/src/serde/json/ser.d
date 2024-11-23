@@ -157,12 +157,12 @@ class JsonSerializer : Serializer {
             write('}');
         }
     }
-    Map start_map(K, V)() {
+    override Map start_map() {
         write('{');
         _lvl++;
         return new Map();
     }
-    Map start_map(K, V)(ulong length) {
+    override Map start_map(ulong length) {
         write('{');
         _lvl++;
         return new Map();
