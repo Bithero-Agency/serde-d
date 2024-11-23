@@ -171,13 +171,15 @@ class YamlSerializer : Serializer {
 
     class Seq : Serializer.Seq {
         bool atStart = true;
-        void write_element(T)(T e) {
+
+        Serializer write_element() {
             if (!atStart) sink("\n");
             atStart = false;
             indent();
             sink("- ");
-            e.serialize(this.outer);
+            return this.outer;
         }
+
         void end() {
             _lvl--;
         }
@@ -195,11 +197,13 @@ class YamlSerializer : Serializer {
 
     class Tuple : Serializer.Tuple {
         bool atStart = true;
-        void write_element(E)(E e) {
+
+        Serializer write_element() {
             if (!atStart) sink(",");
             atStart = false;
-            e.serialize(this.outer);
+            return this.outer;
         }
+
         void end() {
             sink("]");
         }

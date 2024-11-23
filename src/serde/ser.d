@@ -72,7 +72,7 @@ abstract class Serializer {
     /// Sequences are arbitary length chains of elements.
     interface Seq {
         /// Writes an element of the sequence.
-        void write_element(T)(T e);
+        Serializer write_element();
 
         /// Closes the sequence.
         void end();
@@ -87,7 +87,7 @@ abstract class Serializer {
     /// Tuples are fixed sized chains of elements where each element can be a different type...
     interface Tuple {
         /// Writes an element of the tuple.
-        void write_element(E)(E e);
+        Serializer write_element();
 
         /// Closes the tuple.
         void end();
@@ -178,7 +178,7 @@ pragma(inline) void serialize(T, S : Serializer)(T value, S ser) if (is(T == enu
 void serialize(T, S : Serializer)(T[] array, S ser) if (!isSomeString!(T[])) {
     auto s = ser.start_seq(array.length);
     foreach (ref el; array) {
-        s.write_element(el);
+        el.serialize(s.write_element());
     }
     s.end();
 }
@@ -187,7 +187,7 @@ void serialize(T, S : Serializer)(T[] array, S ser) if (!isSomeString!(T[])) {
 void serialize(T, S : Serializer)(DList!T list, S ser) {
     auto s = ser.start_seq();
     foreach (ref el; list) {
-        s.write_element(el);
+        el.serialize(s.write_element());
     }
     s.end();
 }
@@ -195,7 +195,7 @@ void serialize(T, S : Serializer)(DList!T list, S ser) {
 void serialize(T, S : Serializer)(SList!T list, S ser) {
     auto s = ser.start_seq();
     foreach (ref el; list) {
-        s.write_element(el);
+        el.serialize(s.write_element());
     }
     s.end();
 }
@@ -210,7 +210,7 @@ void serialize(R, S : Serializer)(auto ref R range, S ser) if (isInputRange!R &&
         auto s = ser.start_seq();
     }
     foreach (ref el; range) {
-        s.write_element(el);
+        el.serialize(s.write_element());
     }
     s.end();
 }
@@ -232,7 +232,7 @@ void serialize(T, S : Serializer)(auto ref T tuple, S ser) if (isInstanceOf!(Std
     alias Elements = T.Types;
     auto t = ser.start_tuple();
     static foreach (i, E; Elements) {
-        t.write_element!E(tuple[i]);
+        tuple[i].serialize(t.write_element());
     }
     t.end();
 }

@@ -110,12 +110,14 @@ class JsonSerializer : Serializer {
 
     class Seq : Serializer.Seq {
         bool atStart = true;
-        void write_element(T)(T e) {
+
+        Serializer write_element() {
             if (!atStart) write(',');
             atStart = false;
             doIndent();
-            e.serialize(this.outer);
+            return this.outer;
         }
+
         void end() {
             _lvl--;
             doIndent();
@@ -135,12 +137,14 @@ class JsonSerializer : Serializer {
 
     class Tuple : Serializer.Tuple {
         bool atStart = true;
-        void write_element(E)(E e) {
+
+        Serializer write_element() {
             if (!atStart) write(',');
             atStart = false;
             doIndent();
-            e.serialize(this.outer);
+            return this.outer;
         }
+
         void end() {
             _lvl--;
             doIndent();
