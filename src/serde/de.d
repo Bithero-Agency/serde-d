@@ -38,6 +38,7 @@ import std.typecons : Nullable;
 import ninox.std.traits : hasDerivedMember;
 
 import serde.attrs;
+import serde.common;
 import serde.error;
 import serde.value;
 
@@ -51,7 +52,7 @@ abstract class Deserializer {
 
     void read_string(ref string str);
 
-    void read_enum(T)(ref T value) if (is(T == enum));
+    void read_enum(ref AnyValue value);
 
     void read_ignore();
 
@@ -127,8 +128,41 @@ pragma(inline) void deserialize()(auto ref IgnoreValue v, Deserializer de) {
     de.read_ignore();
 }
 
+/// Deserializes an enum
 pragma(inline) void deserialize(T)(ref T value, Deserializer de) if(is(T == enum)) {
-    de.read_enum(value);
+    // Enums are either stored as:
+    //  - string with their name
+    //  - index into the enum
+
+    AnyValue val;
+    de.read_enum(val);
+    if (auto str = val.peek!string) {
+        value = getEnumValueByKey!T(*str);
+        return;
+    }
+
+    auto ty = val.type();
+    if (
+        ty == typeid(ubyte)
+        || ty == typeid(ushort)
+        || ty == typeid(uint)
+        || ty == typeid(ulong)
+    ) {
+        value = getEnumValueByIndex!T(val.get!ulong);
+    }
+    else if (
+        ty == typeid(byte)
+        || ty == typeid(short)
+        || ty == typeid(int)
+        || ty == typeid(long)
+    ) {
+        value = getEnumValueByIndex!T(val.get!long);
+    }
+    else {
+        throw new SerdeException(
+            "Can deserialize enums only from strings or integer types, got: " ~ ty.toString
+        );
+    }
 }
 
 /// Deserializes an array

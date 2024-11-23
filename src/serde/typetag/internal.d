@@ -79,6 +79,10 @@ class InternallyTaggedDeserializer : Deserializer {
         throw new SerdeException("Should not invoke read_any on InternallyTaggedDeserializer!");
     }
 
+    override void read_enum(ref AnyValue value) {
+        throw new SerdeException("Should not invoke read_enum on InternallyTaggedDeserializer!");
+    }
+
     override Deserializer.SeqAccess read_seq() {
         throw new SerdeException("Should not invoke read_seq on InternallyTaggedDeserializer!");
     }

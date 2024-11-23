@@ -97,6 +97,10 @@ class AnyValueDeserializer : Deserializer {
         value = this.val;
     }
 
+    override void read_enum(ref AnyValue value) {
+        value = this.val;
+    }
+
     class SeqAccess : Deserializer.SeqAccess {
         import std.typecons : Nullable;
 

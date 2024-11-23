@@ -448,7 +448,7 @@ T getEnumValueByIndex(T)(ulong idx) if (is(T == enum)) {
         }
         default: break;
     }
-    throw new Exception("Invalid enum index " ~ idx ~ " for type " ~ T.stringof);
+    throw new SerdeException("Invalid enum index " ~ idx.to!string ~ " for type " ~ T.stringof);
 }
 
 T getEnumValueByKey(T)(string name) if (is(T == enum)) {
@@ -458,5 +458,5 @@ T getEnumValueByKey(T)(string name) if (is(T == enum)) {
         }
         default: break;
     }
-    throw new Exception("Could not lookup enum key '" ~ name ~ "' for type " ~ T.stringof);
+    throw new SerdeException("Could not lookup enum key '" ~ name ~ "' for type " ~ T.stringof);
 }

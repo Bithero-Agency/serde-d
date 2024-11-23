@@ -772,10 +772,11 @@ class YamlDeserializer : Deserializer {
         throw new YamlParsingException("read_any is NIY!");
     }
 
-    void read_enum(T)(ref T value) if (is(T == enum)) {
+    override void read_enum(ref AnyValue value) {
+        // TODO: use read_any instead, to allow enums also to be integers
         string val;
         this.read_string(val);
-        value = getEnumValueByKey!T(val);
+        value = val;
     }
 
     unittest {
@@ -789,7 +790,7 @@ class YamlDeserializer : Deserializer {
             Planet p;
             try {
                 auto de = new YamlDeserializer(inp);
-                de.read_enum(p);
+                p.deserialize(de);
                 assert(de.buffer.empty, "Failed parsing '" ~ inp ~ "'; still data left in buffer");
             }
             catch (Exception e) {

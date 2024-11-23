@@ -330,10 +330,8 @@ class JsonDeserializer : Deserializer {
         }
     }
 
-    void read_enum(T)(ref T value) if (is(T == enum)) {
-        string val;
-        read_string(val);
-        value = getEnumValueByKey!T(val);
+    override void read_enum(ref AnyValue value) {
+        read_any(value);
     }
 
     class SeqAccess : Deserializer.SeqAccess {
