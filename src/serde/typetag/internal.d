@@ -185,3 +185,60 @@ template TypetagInternal(string tag) {
         s.end();
     }
 }
+
+unittest {
+    import serde.typetag, serde.base, serde;
+
+    interface Base {
+        mixin TypetagInternal!("type");
+    }
+    static class Extend : Base {
+        string user;
+        this() {}
+        this(string user) { this.user = user; }
+        mixin RegisterTypetag!(Base, "ext");
+    }
+
+    static class FooSerializer : BaseSerializer {
+        string output;
+        override void write_string(string str) {
+            output ~= str;
+        }
+        class Struct : Serializer.Struct {
+            bool atStart = true;
+            Serializer write_field(string name) {
+                if (!atStart) output ~= ",";
+                atStart = false;
+                output ~= name ~ ":";
+                return this.outer;
+            }
+            void end() {
+                output ~= "}";
+            }
+        }
+        override Struct start_struct() {
+            output ~= "{";
+            return new Struct();
+        }
+    }
+    string toFoo(T)(T v) {
+        auto ser = new FooSerializer();
+        v.serialize(ser);
+        return ser.output;
+    }
+
+    {
+        Base b = new Extend("foo");
+        assert( toFoo(b) == "{type:ext,user:foo}" );
+    }
+    {
+        AnyMap inp;
+        inp["type"] = "ext";
+        inp["user"] = "foo";
+        Base b = null;
+        b.deserialize(new AnyValueDeserializer(AnyValue(inp)));
+        assert(b !is null);
+        assert((cast(Extend)b) !is null);
+        assert((cast(Extend)b).user == "foo");
+    }
+}
