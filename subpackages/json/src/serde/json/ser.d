@@ -185,7 +185,7 @@ class JsonSerializer : Serializer {
             write('}');
         }
     }
-    Struct start_struct(T)() {
+    override Struct start_struct() {
         write('{');
         _lvl++;
         return new Struct();

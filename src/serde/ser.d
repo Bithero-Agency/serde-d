@@ -108,8 +108,8 @@ abstract class Serializer {
         void end();
     }
 
-    /// Starts an struct. `T` is the type the struct is for and **must** be either an dlang `struct` or `class`.
-    Struct start_struct(T)();
+    /// Starts an struct.
+    Struct start_struct();
 }
 
 package (serde) struct RawValue {
@@ -220,7 +220,7 @@ if (
     import std.meta, std.traits;
     import ninox.std.traits;
 
-    auto s = ser.start_struct!T();
+    auto s = ser.start_struct();
 
     enum isFieldOfInterest(alias Field) = (
         !Serde.isSkipped!(Field.raw)

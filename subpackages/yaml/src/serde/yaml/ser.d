@@ -238,7 +238,7 @@ class YamlSerializer : Serializer {
             _lvl--;
         }
     }
-    Struct start_struct(T)() {
+    override Struct start_struct() {
         if (_lvl >= 0) sink("\n");
         _lvl++;
         return new Struct();
