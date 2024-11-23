@@ -246,11 +246,23 @@ class YamlSerializer : Serializer {
 
 }
 
-string toYaml(T)(ref T t) {
+string toYaml(T)(auto ref T t) {
     string outp = "";
     auto ser = new YamlSerializer(
         (const(char)[] chunk) { outp ~= chunk; }
     );
     t.serialize(ser);
     return outp;
+}
+void toYaml(T)(auto ref T t, YamlSerializer.Sink sink) {
+    auto ser = new YamlSerializer(sink);
+    t.serialize(ser);
+}
+void toYaml(T)(auto ref T t, YamlSerializer.Sink.FnT sink) {
+    auto ser = new YamlSerializer(sink);
+    t.serialize(ser);
+}
+void toYaml(T)(auto ref T t, YamlSerializer.Sink.DgT sink) {
+    auto ser = new YamlSerializer(sink);
+    t.serialize(ser);
 }
