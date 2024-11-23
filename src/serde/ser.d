@@ -38,6 +38,7 @@ import std.range.primitives : isInputRange, ElementType, hasLength;
 import std.typecons : StdTuple = Tuple;
 
 import serde.attrs;
+import serde.common;
 
 abstract class Serializer {
 
@@ -51,7 +52,7 @@ abstract class Serializer {
     void write_raw(RawValue v);
 
     /// Writes an enum value.
-    void write_enum(T)(ref T value) if (is(T == enum));
+    void write_enum(string name, ulong index);
 
     /// Sequences are arbitary length chains of elements.
     interface Seq {
@@ -132,7 +133,8 @@ pragma(inline) void serialize(S : Serializer)(ref RawValue value, S ser) {
 
 /// Serializes an enum
 pragma(inline) void serialize(T, S : Serializer)(T value, S ser) if (is(T == enum)) {
-    ser.write_enum(value);
+    auto index = getEnumKeyIndex(value);
+    ser.write_enum(value.getEnumKeyName(index), index);
 }
 
 /// Serializes an array

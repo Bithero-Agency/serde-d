@@ -149,9 +149,8 @@ class YamlSerializer : Serializer {
         sink(cast(string) v.value);
     }
 
-    void write_enum(T)(ref T value) if (is(T == enum)) {
-        import serde.common;
-        write_string( value.getEnumKeyName );
+    override void write_enum(string name, ulong index) {
+        write_string(name);
     }
 
     class Seq : Serializer.Seq {
