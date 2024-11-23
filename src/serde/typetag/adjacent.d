@@ -90,7 +90,7 @@ template TypetagAdjacent(string tag, string value) {
             }
         }
         throw new SerdeException(
-            "Cannot deserialize " ~ typeof(this).stringof ~ " from empty object"
+            "Cannot deserialize " ~ typeof(this).stringof ~ " from an empty object"
         );
     }
 

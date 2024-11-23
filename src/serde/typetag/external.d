@@ -52,7 +52,9 @@ template TypetagExternal() {
 
         AnyValue rawKey;
         if (!map.read_key(rawKey)) {
-            throw new SerdeException("Cannot deserialize empty object");
+            throw new SerdeException(
+                "Cannot deserialize " ~ typeof(this).stringof ~ " from an empty object"
+            );
         }
 
         auto key = rawKey.get!string;

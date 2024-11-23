@@ -161,7 +161,7 @@ template TypetagInternal(string tag) {
                 value.deserialize(map.read_value());
                 auto ptr = value in typetag_registry();
                 if (ptr is null) {
-                    throw new SerdeException("could not find deserializer target");
+                    throw new SerdeException("Could not find type '" ~ value ~ "' for " ~ typeof(this).stringof);
                 }
                 (*ptr)( a, new InternallyTaggedDeserializer(entries, map) );
                 return;
@@ -172,7 +172,7 @@ template TypetagInternal(string tag) {
                 entries ~= InternallyTaggedDeserializer.Entry(rawVal, key);
             }
         }
-        throw new SerdeException("Could not find any type key...");
+        throw new SerdeException("Could not find '" ~ tag ~ "' key for " ~ typeof(this).stringof);
     }
 
     static void serializeInstance(ref typeof(this) instance, serde.ser.Serializer se) {
