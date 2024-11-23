@@ -29,9 +29,6 @@ import serde.ser;
 import serde.de;
 import serde.error;
 import serde.value;
-import serde.typetag : TypetagBase;
-
-import std.typecons : Tuple, tuple;
 
 /// Deserializer for an internally tagged class.
 /// This means that the tag is stored alongside all other properties.
@@ -133,8 +130,9 @@ class InternallyTaggedDeserializer : Deserializer {
 
 /// Must be placed **inside** a baseclass or interface.
 /// 
-/// Creates the neccessary `typetag_registry` static function for decendants to regiter themselfs to,
-/// as well as a `deserializeInstance` static function to deserialize an instance.
+/// Creates the neccessary typetag-base via the TypetagBase template,
+/// as well as a `deserializeInstance` and a `serializeInstance` static function to
+/// deserialize / serialize an instance.
 /// 
 /// Uses the "internally tagged" format, where the tag property is right besides all other properties
 /// of the struct/class:
@@ -151,8 +149,7 @@ template TypetagInternal(string tag) {
     mixin serde.typetag.TypetagBase!();
 
     static void deserializeInstance(ref typeof(this) a, serde.de.Deserializer de) {
-        import serde : AnyValue;
-        import serde.typetag;
+        import serde, serde.typetag;
 
         auto map = de.read_map();
         InternallyTaggedDeserializer.Entry[] entries;
@@ -164,7 +161,7 @@ template TypetagInternal(string tag) {
                 value.deserialize(map.read_value());
                 auto ptr = value in typetag_registry();
                 if (ptr is null) {
-                    throw new Exception("could not find deserializer target");
+                    throw new SerdeException("could not find deserializer target");
                 }
                 (*ptr)( a, new InternallyTaggedDeserializer(entries, map) );
                 return;
@@ -175,7 +172,7 @@ template TypetagInternal(string tag) {
                 entries ~= InternallyTaggedDeserializer.Entry(rawVal, key);
             }
         }
-        throw new Exception("Could not find any type key...");
+        throw new SerdeException("Could not find any type key...");
     }
 
     static void serializeInstance(ref typeof(this) instance, serde.ser.Serializer se) {
