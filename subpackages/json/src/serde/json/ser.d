@@ -107,12 +107,12 @@ class JsonSerializer : Serializer {
             write(']');
         }
     }
-    Seq start_seq(T)() {
+    override Seq start_seq() {
         write('[');
         _lvl++;
         return new Seq();
     }
-    Seq start_seq(T)(ulong length) {
+    override Seq start_seq(ulong length) {
         write('[');
         _lvl++;
         return new Seq();

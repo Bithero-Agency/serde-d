@@ -62,11 +62,11 @@ abstract class Serializer {
         void end();
     }
 
-    /// Starts an sequence of `T` elements with an unknown length.
-    Seq start_seq(T)();
+    /// Starts an sequence of unknown length.
+    Seq start_seq();
 
-    /// Starts an sequence of `T` elements with an known length.
-    Seq start_seq(T)(ulong length);
+    /// Starts an sequence of known length.
+    Seq start_seq(ulong length);
 
     /// Tuples are fixed sized chains of elements where each element can be a different type...
     interface Tuple {
@@ -138,7 +138,7 @@ pragma(inline) void serialize(T, S : Serializer)(T value, S ser) if (is(T == enu
 
 /// Serializes an array
 void serialize(T, S : Serializer)(T[] array, S ser) if (!isSomeString!(T[])) {
-    auto s = ser.start_seq!T(array.length);
+    auto s = ser.start_seq(array.length);
     foreach (ref el; array) {
         s.write_element(el);
     }
@@ -147,7 +147,7 @@ void serialize(T, S : Serializer)(T[] array, S ser) if (!isSomeString!(T[])) {
 
 /// Serializes an libphobos double-linked list
 void serialize(T, S : Serializer)(DList!T list, S ser) {
-    auto s = ser.start_seq!T();
+    auto s = ser.start_seq();
     foreach (ref el; list) {
         s.write_element(el);
     }
@@ -155,7 +155,7 @@ void serialize(T, S : Serializer)(DList!T list, S ser) {
 }
 /// Serializes an libphobos single-linked list
 void serialize(T, S : Serializer)(SList!T list, S ser) {
-    auto s = ser.start_seq!T();
+    auto s = ser.start_seq();
     foreach (ref el; list) {
         s.write_element(el);
     }
@@ -167,9 +167,9 @@ void serialize(T, S : Serializer)(SList!T list, S ser) {
 void serialize(R, S : Serializer)(auto ref R range, S ser) if (isInputRange!R && !isSomeString!R) {
     alias T = ElementType!R;
     static if (hasLength!R) {
-        auto s = ser.start_seq!T(range.length);
+        auto s = ser.start_seq(range.length);
     } else {
-        auto s = ser.start_seq!T();
+        auto s = ser.start_seq();
     }
     foreach (ref el; range) {
         s.write_element(el);

@@ -167,12 +167,12 @@ class YamlSerializer : Serializer {
             _lvl--;
         }
     }
-    Seq start_seq(T)() {
+    override Seq start_seq() {
         if (_lvl >= 0) sink("\n");
         _lvl++;
         return new Seq();
     }
-    Seq start_seq(T)(ulong length) {
+    override Seq start_seq(ulong length) {
         if (_lvl >= 0) sink("\n");
         _lvl++;
         return new Seq();
