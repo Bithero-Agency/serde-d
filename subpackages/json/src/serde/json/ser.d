@@ -185,15 +185,17 @@ class JsonSerializer : Serializer {
 
     class Struct : Serializer.Struct {
         bool atStart = true;
-        void write_field(T)(string name, T value) {
+
+        Serializer write_field(string name) {
             if (!atStart) write(',');
             atStart = false;
             doIndent();
             name.serialize(this.outer);
             write(':');
             if (indent !is null) write(' ');
-            value.serialize(this.outer);
+            return this.outer;
         }
+
         void end() {
             _lvl--;
             doIndent();

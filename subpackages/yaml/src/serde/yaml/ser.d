@@ -242,7 +242,8 @@ class YamlSerializer : Serializer {
 
     class Struct : Serializer.Struct {
         bool atStart = true;
-        void write_field(T)(string name, T value) {
+
+        Serializer write_field(string name) {
             if (!atStart) sink("\n");
             atStart = false;
             indent();
@@ -252,8 +253,9 @@ class YamlSerializer : Serializer {
                 name.serialize(this.outer);
             }
             sink(": ");
-            value.serialize(this.outer);
+            return this.outer;
         }
+
         void end() {
             _lvl--;
         }

@@ -117,7 +117,7 @@ abstract class Serializer {
     /// Structs are... well structs
     interface Struct {
         /// Writes an field.
-        void write_field(T)(string name, T value);
+        Serializer write_field(string name);
 
         /// Closes the struct.
         void end();
@@ -267,18 +267,15 @@ if (
     );
     alias fields = Filter!(isFieldOfInterest, GetFields!T);
     static foreach (f; fields) {
-        static if (Serde.isRaw!(f.raw)) {
-            static assert(isSomeString!(f.type), "@Serde.Raw can only be applied to fields with a string type.");
-            s.write_field(
-                Serde.getNameFromItem!(f.raw, f.name, true),
-                RawValue(mixin("val." ~ f.name))
-            );
-        }
-        else {
-            s.write_field(
-                Serde.getNameFromItem!(f.raw, f.name, true),
-                mixin("val." ~ f.name)
-            );
+        {
+            auto fser = s.write_field(Serde.getNameFromItem!(f.raw, f.name, true));
+            static if (Serde.isRaw!(f.raw)) {
+                static assert(isSomeString!(f.type), "@Serde.Raw can only be applied to fields with a string type.");
+                RawValue(mixin("val." ~ f.name)).serialize(fser);
+            }
+            else {
+                mixin("val." ~ f.name).serialize(fser);
+            }
         }
     }
 
@@ -323,18 +320,15 @@ if (
     }
     alias getters = staticMap!(correctProp, Filter!(isGetter, GetDerivedMembers!T));
     static foreach (m; getters) {
-        static if (Serde.isRaw!(m.raw)) {
-            static assert(isSomeString!(ReturnType!(m.type)), "@Serde.Raw can only be applied to fields with a string type.");
-            s.write_field(
-                Serde.getNameFromItem!(m.raw, m.name, true),
-                RawValue(mixin("val." ~ m.name ~ "()"))
-            );
-        }
-        else {
-            s.write_field(
-                Serde.getNameFromItem!(m.raw, m.name, true),
-                mixin("val." ~ m.name ~ "()")
-            );
+        {
+            auto fser = s.write_field(Serde.getNameFromItem!(m.raw, m.name, true));
+            static if (Serde.isRaw!(m.raw)) {
+                static assert(isSomeString!(ReturnType!(m.type)), "@Serde.Raw can only be applied to fields with a string type.");
+                RawValue(mixin("val." ~ m.name ~ "()")).serialize(fser);
+            }
+            else {
+                mixin("val." ~ m.name ~ "()").serialize(fser);
+            }
         }
     }
 
