@@ -64,6 +64,9 @@ import serde.de;
 
 class AnyValueDeserializer : Deserializer {
     AnyValue val;
+    this(AnyValue val) {
+        this.val = val;
+    }
     this(ref AnyValue val) {
         this.val = val;
     }
