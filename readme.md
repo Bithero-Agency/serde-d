@@ -110,6 +110,10 @@ struct MyObj {
 
 > Note: for more infromation how to paragmatically use the deserializer (including `deserializeInstance`), see `documentation/types.md` and `documentation/deserializers.md`.
 
+### Interfaces and inheritance
+
+To sucessfully serialize & deserialize types with inheritance or interfaces, please see `documentation/typetag.md`.
+
 ### Attributes
 
 The package comes with an set of attributes, that can be used to tweak the default implementation of `serialize` and `deserialize` for strucs and classes. These live all in `serde.attrs`, but are re-exported in `serde` so you can just write `import serde;` and are good to go.
