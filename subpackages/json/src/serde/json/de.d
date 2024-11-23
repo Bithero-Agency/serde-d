@@ -35,6 +35,7 @@ import std.typecons : Nullable, nullable;
 import std.range : popFrontExactly;
 
 import core.internal.util.math : min;
+import serde.json.error;
 
 class JsonDeserializer : Deserializer {
     ReadBuffer buffer;
@@ -73,7 +74,7 @@ class JsonDeserializer : Deserializer {
     pragma(inline)
     private void consume_char(char c, string msg) {
         if (next_char != c) {
-            throw new Exception(msg);
+            throw new JsonParsingException(msg);
         }
     }
 
@@ -88,7 +89,7 @@ class JsonDeserializer : Deserializer {
             value = false;
         }
         else {
-            throw new Exception("Expected boolean");
+            throw new JsonParsingException("Expected boolean");
         }
     }
 
@@ -138,7 +139,7 @@ class JsonDeserializer : Deserializer {
                     v = shouldNegate ? v*-1 : v;
                 }
                 if (v > T.max) {
-                    throw new Exception("Cannot fit integer");
+                    throw new JsonParsingException("Cannot fit integer");
                 }
                 value = cast(T) v;
                 return;
@@ -148,7 +149,7 @@ class JsonDeserializer : Deserializer {
                     string str;
                     this.read_string(str);
                     if (str.length < 1) {
-                        throw new Exception("Expected number or non-empty string");
+                        throw new JsonParsingException("Expected number or non-empty string");
                     }
                     import std.utf : decode;
                     size_t i = 0;
@@ -156,7 +157,7 @@ class JsonDeserializer : Deserializer {
                     return;
                 }
                 else {
-                    throw new Exception("Expected integer");
+                    throw new JsonParsingException("Expected integer");
                 }
             }
         }
@@ -204,7 +205,7 @@ class JsonDeserializer : Deserializer {
         if (this.buffer.startsWith("null")) {
             this.buffer.popFrontExactly(4);
         } else {
-            throw new Exception("Expected null");
+            throw new JsonParsingException("Expected null");
         }
     }
 
@@ -231,14 +232,14 @@ class JsonDeserializer : Deserializer {
                     else if (c == '[') stack ~= ']';
                     else if (c == '}' || c == ']') {
                         if (c == stack[$-1]) stack = stack[0..$-1];
-                        else throw new Exception("Syntax error");
+                        else throw new JsonParsingException("Syntax error");
                         if (stack.length <= 0) break;
                     }
                 }
                 break;
             }
             default: {
-                throw new Exception("Syntax error");
+                throw new JsonParsingException("Syntax error");
             }
         }
     }
@@ -299,7 +300,7 @@ class JsonDeserializer : Deserializer {
                 break;
             }
             default: {
-                throw new Exception("Syntax error");
+                throw new JsonParsingException("Syntax error");
             }
         }
     }
@@ -342,7 +343,7 @@ class JsonDeserializer : Deserializer {
         Deserializer read_element() {
             skip_ws;
             if (peek_char == ']') return null;
-            if (!atStart && next_char != ',') throw new Exception("Expected array comma");
+            if (!atStart && next_char != ',') throw new JsonParsingException("Expected array comma");
             atStart = false;
             skip_ws;
             if (!strict && peek_char == ']') return null;
@@ -373,7 +374,7 @@ class JsonDeserializer : Deserializer {
         override bool read_key(ref AnyValue key) {
             skip_ws;
             if (peek_char == '}') return false;
-            if (!atStart && next_char != ',') throw new Exception("Expected map comma");
+            if (!atStart && next_char != ',') throw new JsonParsingException("Expected map comma");
             atStart = false;
             skip_ws;
             if (!strict && peek_char == '}') return false;
