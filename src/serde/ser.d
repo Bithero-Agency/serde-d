@@ -264,12 +264,29 @@ if (
     && !is(T == enum)
     && !isSpecialStructOrClass!T
     && !__traits(compiles, T.serialize)
+    && !hasDerivedMember!(T, "serializeInstance")
+    && !Serde.isUfcs!T
+) {
+    auto s = ser.start_struct();
+    val.serializeInto(s);
+    s.end();
+}
+
+/// Serializes structs and classes that are not already handled in special cases of `serialize`,
+/// have not already an member named `serialize` and are not marked with `Serde.UseUfcs`.
+/// 
+/// Special "into" variant, that uses an existing Serializer.Struct instead of an Serializer.
+void serializeInto(T)(auto ref T val, Serializer.Struct s)
+if (
+    (is(T == struct) || is(T == class))
+    && !is(T == enum)
+    && !isSpecialStructOrClass!T
+    && !__traits(compiles, T.serialize)
+    && !hasDerivedMember!(T, "serializeInstance")
     && !Serde.isUfcs!T
 ) {
     import std.meta, std.traits;
     import ninox.std.traits;
-
-    auto s = ser.start_struct();
 
     enum isFieldOfInterest(alias Field) = (
         !Serde.isSkipped!(Field.raw)
@@ -344,5 +361,4 @@ if (
         }
     }
 
-    s.end();
 }
