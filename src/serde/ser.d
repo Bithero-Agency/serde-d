@@ -248,7 +248,7 @@ private enum isSpecialStructOrClass(T) = (
 
 void serialize(T)(auto ref T value, Serializer der)
 if (
-    (is(T == struct) || is(T == class))
+    (is(T == struct) || is(T == class) || is(T == interface))
     && !is(T == enum)
     && !isSpecialStructOrClass!T
     && hasDerivedMember!(T, "serializeInstance")

@@ -307,7 +307,7 @@ private enum isSpecialStructOrClass(T) = (
 
 void deserialize(T)(ref T value, Deserializer de)
 if (
-    (is(T == struct) || is(T == class))
+    (is(T == struct) || is(T == class) || is(T == interface))
     && !is(T == enum)
     && !isSpecialStructOrClass!T
     && hasDerivedMember!(T, "deserializeInstance")
