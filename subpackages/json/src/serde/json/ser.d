@@ -66,12 +66,28 @@ class JsonSerializer : Serializer {
         this.sink([c]);
     }
 
-    void write_basic(T)(T value) if (isScalarType!T) {
-        static if (is(T == char) || is(T == wchar) || is(T == dchar)) {
-            this.write_string([value]);
-        } else {
-            write(value.to!string);
-        }
+    override void write_bool(bool value) {
+        write(value.to!string);
+    }
+
+    override void write_signed(long value, ubyte sz) {
+        write(value.to!string);
+    }
+
+    override void write_unsigned(ulong value, ubyte sz) {
+        write(value.to!string);
+    }
+
+    override void write_float(double value, ubyte sz) {
+        write(value.to!string);
+    }
+
+    override void write_real(real value) {
+        write(value.to!string);
+    }
+
+    override void write_char(dchar value) {
+        this.write_string([value].to!string);
     }
 
     override void write_string(string str) {

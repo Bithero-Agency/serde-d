@@ -42,8 +42,23 @@ import serde.common;
 
 abstract class Serializer {
 
-    /// Writes an "basic" scalar value. This is any type that satisfies `std.traits.isScalarType`, but isnt an enum.
-    void write_basic(T)(T value) if (isScalarType!T && !is(T == enum));
+    /// Writes an boolean value.
+    void write_bool(bool b);
+
+    /// Writes an signed integer. `sz` specifies byte(1), short(2), int(4) or long(8).
+    void write_signed(long l, ubyte sz);
+
+    /// Writes an unsigned integer. `sz` specifies ubyte(1), ushort(2), uint(4) or ulong(8).
+    void write_unsigned(ulong l, ubyte sz);
+
+    /// Writes an floating-point number. `sz` specifies float(4) or double(8).
+    void write_float(double f, ubyte sz);
+
+    /// Writes an real value.
+    void write_real(real r);
+
+    /// Writes an character value.
+    void write_char(dchar c);
 
     /// Writes an "string" value. (Not an enum!).
     void write_string(string str);
@@ -118,7 +133,25 @@ package (serde) struct RawValue {
 
 /// Serializes scalar types (bool, all integers, float, double, real, all char types)
 pragma(inline) void serialize(T, S : Serializer)(T value, S ser) if (isScalarType!T && !is(T == enum)) {
-    ser.write_basic(value);
+    import std.traits : isSomeChar, isUnsigned;
+    static if (__traits(isFloating, T)) {
+        ser.write_float(value, T.sizeof);
+    }
+    else static if (is(T == real)) {
+        ser.write_float(value);
+    }
+    else static if (is(T == bool)) {
+        ser.write_float(value);
+    }
+    else static if (isSomeChar!T) {
+        ser.write_char(cast(dchar) value);
+    }
+    else static if (isUnsigned!T) {
+        ser.write_unsigned(cast(ulong) value, T.sizeof);
+    }
+    else {
+        ser.write_signed(cast(long) value, T.sizeof);
+    }
 }
 
 /// Serializes an string

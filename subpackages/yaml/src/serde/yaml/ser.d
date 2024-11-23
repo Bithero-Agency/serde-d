@@ -91,12 +91,28 @@ class YamlSerializer : Serializer {
             sink(this._indent);
     }
 
-    void write_basic(T)(T value) if (isScalarType!T) {
-        static if (is(T == char) || is(T == wchar) || is(T == dchar)) {
-            sink("'" ~ value.to!string ~ "'");
-        } else {
-            sink(value.to!string);
-        }
+    override void write_bool(bool value) {
+        sink(value.to!string);
+    }
+
+    override void write_signed(long value, ubyte sz) {
+        sink(value.to!string);
+    }
+
+    override void write_unsigned(ulong value, ubyte sz) {
+        sink(value.to!string);
+    }
+
+    override void write_float(double value, ubyte sz) {
+        sink(value.to!string);
+    }
+
+    override void write_real(real value) {
+        sink(value.to!string);
+    }
+
+    override void write_char(dchar value) {
+        sink("'" ~ value.to!string ~ "'");
     }
 
     override void write_string(string str) {
