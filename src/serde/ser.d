@@ -45,8 +45,8 @@ abstract class Serializer {
     /// Writes an "basic" scalar value. This is any type that satisfies `std.traits.isScalarType`, but isnt an enum.
     void write_basic(T)(T value) if (isScalarType!T && !is(T == enum));
 
-    /// Writes an "string" value. This is any type that satisfies `std.traits.isSomeString`, but isnt an enum.
-    void write_string(T)(scope T str) if (isSomeString!T && !is(T == enum));
+    /// Writes an "string" value. (Not an enum!).
+    void write_string(string str);
 
     /// Writes an raw value; internally used to support the `Serde.Raw` annotation.
     void write_raw(RawValue v);
@@ -123,7 +123,11 @@ pragma(inline) void serialize(T, S : Serializer)(T value, S ser) if (isScalarTyp
 
 /// Serializes an string
 pragma(inline) void serialize(T, S : Serializer)(auto ref T str, S ser) if (isSomeString!T && !is(T == enum)) {
-    ser.write_string(str);
+    static if (is(T == string)) {
+        ser.write_string(str);
+    } else {
+        ser.write_string(str.to!string);
+    }
 }
 
 /// Serializes an string raw

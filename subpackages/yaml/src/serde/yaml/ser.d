@@ -99,7 +99,7 @@ class YamlSerializer : Serializer {
         }
     }
 
-    void write_string(T)(scope T str) if (isSomeString!T) {
+    override void write_string(string str) {
         import std.string : empty, indexOf, lineSplitter;
         import std.typecons : Yes;
 

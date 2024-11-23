@@ -74,7 +74,7 @@ class JsonSerializer : Serializer {
         }
     }
 
-    void write_string(T)(scope T str) if (isSomeString!T) {
+    override void write_string(string str) {
         write('"');
         void appendData(const(ubyte)[] bytes) {
             this.sink(cast(const(char)[]) bytes);
