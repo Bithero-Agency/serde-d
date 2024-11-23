@@ -101,3 +101,46 @@ void main() {
 ```
 
 > Note: The tag-instance pair is the only thing allowed inside the map; no other keys before or after it are allowed.
+
+## Adjacent tag
+
+The adjacently tagged format puts the tag and value inside seperate keys:
+
+```d
+import std.stdio;
+import serde.json;
+import serde.typetag;
+
+interface Auth {
+    mixin TypetagAdjacent!("type", "value");
+}
+
+class BasicAuth : Auth {
+    string user;
+    this(string user) { this.user = user; }
+
+    mixin RegisterTypetag!(Auth, "basic");
+}
+
+void main() {
+    Auth a = new BasicAuth("foo");
+    writeln( a.toJson );
+
+    auto a = fromJson!Auth( a.toJson );
+    assert(cast(BasicAuth) a !is null);
+}
+```
+
+```json
+{
+    // this is the tag!
+    "type": "basic",
+    // this is the value!
+    "value": {
+        "user": "foo",
+        // ...
+    },
+}
+```
+
+> Note: The order in which the tag and the value are parsed is irrelevant, they only need to be the only keys inside the map.
