@@ -99,10 +99,10 @@ abstract class Serializer {
     /// Maps are key-value pairs
     interface Map {
         /// Writes the key of the pair. Is immediately followed by `write_value`.
-        void write_key(K)(K key) {}
+        Serializer write_key();
 
         /// Writes the value of the pair. Is immediatly after `write_key`.
-        void write_value(V)(V value) {}
+        Serializer write_value();
 
         /// Closes the map.
         void end();
@@ -221,8 +221,8 @@ void serialize(AA, S : Serializer)(auto ref AA aa, S ser) if (isAssociativeArray
     alias V = ValueType!AA;
     auto m = ser.start_map(aa.length);
     foreach (ref k, ref v; aa) {
-        m.write_key(k);
-        m.write_value(v);
+        k.serialize(m.write_key());
+        v.serialize(m.write_value());
     }
     m.end();
 }

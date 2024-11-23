@@ -215,21 +215,25 @@ class YamlSerializer : Serializer {
 
     class Map : Serializer.Map {
         bool atStart = true;
-        void write_key(K)(K key) {
+
+        Serializer write_key() {
             if (!atStart) sink("\n");
             atStart = false;
             indent();
-            {
-                _printsKey = true;
-                scope(exit) _printsKey = false;
-                key.serialize(this.outer);
-            }
+
+            _printsKey = true;
+            return this.outer;
         }
-        void write_value(V)(V value) {
+
+        Serializer write_value() {
+            _printsKey = false;
+
             sink(": ");
-            value.serialize(this.outer);
+            return this.outer;
         }
+
         void end() {
+            _printsKey = false;
             _lvl--;
         }
     }

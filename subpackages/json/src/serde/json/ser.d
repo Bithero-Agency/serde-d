@@ -159,17 +159,20 @@ class JsonSerializer : Serializer {
 
     class Map : Serializer.Map {
         bool atStart = true;
-        void write_key(K)(K key) {
+
+        Serializer write_key() {
             if (!atStart) write(',');
             atStart = false;
             doIndent();
-            key.serialize(this.outer);
+            return this.outer;
         }
-        void write_value(V)(V value) {
+
+        Serializer write_value() {
             write(':');
             if (indent !is null) write(' ');
-            value.serialize(this.outer);
+            return this.outer;
         }
+
         void end() {
             _lvl--;
             doIndent();
