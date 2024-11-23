@@ -60,3 +60,44 @@ void main() {
 The `TypetagInternal` template accepts an tag argument, which can be used to configure the name of the key used as a tag.
 
 > Note: The tag doesn't need to be the first key either; all keys before it are read as a `AnyValue` (`read_any`) and savely stored away until the correct deserialization target could be found.
+
+## External tag
+
+The internal tag puts the tag as a key and the instance as the value of said key:
+
+```d
+import std.stdio;
+import serde.json;
+import serde.typetag;
+
+interface Auth {
+    mixin TypetagExternal!();
+}
+
+class BasicAuth : Auth {
+    string user;
+    this(string user) { this.user = user; }
+
+    mixin RegisterTypetag!(Auth, "basic");
+}
+
+void main() {
+    Auth a = new BasicAuth("foo");
+    writeln( a.toJson );
+
+    auto a = fromJson!Auth( a.toJson );
+    assert(cast(BasicAuth) a !is null);
+}
+```
+
+```json
+{
+    // this is the tag!
+    "basic": {
+        "user": "foo",
+        // ...
+    },
+}
+```
+
+> Note: The tag-instance pair is the only thing allowed inside the map; no other keys before or after it are allowed.

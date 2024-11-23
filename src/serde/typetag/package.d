@@ -25,6 +25,7 @@
  */
 module serde.typetag;
 
+public import serde.typetag.external;
 public import serde.typetag.internal;
 
 /// Must be placed **inside** a baseclass or interface.
