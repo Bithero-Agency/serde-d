@@ -132,7 +132,7 @@ package (serde) struct RawValue {
 }
 
 /// Serializes scalar types (bool, all integers, float, double, real, all char types)
-pragma(inline) void serialize(T, S : Serializer)(T value, S ser) if (isScalarType!T && !is(T == enum)) {
+pragma(inline) void serialize(T)(T value, Serializer ser) if (isScalarType!T && !is(T == enum)) {
     import std.traits : isSomeChar, isUnsigned;
     static if (__traits(isFloating, T)) {
         ser.write_float(value, T.sizeof);
@@ -155,7 +155,7 @@ pragma(inline) void serialize(T, S : Serializer)(T value, S ser) if (isScalarTyp
 }
 
 /// Serializes an string
-pragma(inline) void serialize(T, S : Serializer)(auto ref T str, S ser) if (isSomeString!T && !is(T == enum)) {
+pragma(inline) void serialize(T)(auto ref T str, Serializer ser) if (isSomeString!T && !is(T == enum)) {
     static if (is(T == string)) {
         ser.write_string(str);
     } else {
@@ -164,18 +164,18 @@ pragma(inline) void serialize(T, S : Serializer)(auto ref T str, S ser) if (isSo
 }
 
 /// Serializes an string raw
-pragma(inline) void serialize(S : Serializer)(ref RawValue value, S ser) {
+pragma(inline) void serialize()(ref RawValue value, Serializer ser) {
     ser.write_raw(value);
 }
 
 /// Serializes an enum
-pragma(inline) void serialize(T, S : Serializer)(T value, S ser) if (is(T == enum)) {
+pragma(inline) void serialize(T)(T value, Serializer ser) if (is(T == enum)) {
     auto index = getEnumKeyIndex(value);
     ser.write_enum(value.getEnumKeyName(index), index);
 }
 
 /// Serializes an array
-void serialize(T, S : Serializer)(T[] array, S ser) if (!isSomeString!(T[])) {
+void serialize(T)(T[] array, Serializer ser) if (!isSomeString!(T[])) {
     auto s = ser.start_seq(array.length);
     foreach (ref el; array) {
         el.serialize(s.write_element());
@@ -184,7 +184,7 @@ void serialize(T, S : Serializer)(T[] array, S ser) if (!isSomeString!(T[])) {
 }
 
 /// Serializes an libphobos double-linked list
-void serialize(T, S : Serializer)(DList!T list, S ser) {
+void serialize(T)(DList!T list, Serializer ser) {
     auto s = ser.start_seq();
     foreach (ref el; list) {
         el.serialize(s.write_element());
@@ -192,7 +192,7 @@ void serialize(T, S : Serializer)(DList!T list, S ser) {
     s.end();
 }
 /// Serializes an libphobos single-linked list
-void serialize(T, S : Serializer)(SList!T list, S ser) {
+void serialize(T)(SList!T list, Serializer ser) {
     auto s = ser.start_seq();
     foreach (ref el; list) {
         el.serialize(s.write_element());
@@ -202,7 +202,7 @@ void serialize(T, S : Serializer)(SList!T list, S ser) {
 
 /// Serializes an input range;
 /// if the range also has an length attribute, it is taken into account.
-void serialize(R, S : Serializer)(auto ref R range, S ser) if (isInputRange!R && !isSomeString!R) {
+void serialize(R)(auto ref R range, Serializer ser) if (isInputRange!R && !isSomeString!R) {
     alias T = ElementType!R;
     static if (hasLength!R) {
         auto s = ser.start_seq(range.length);
@@ -216,7 +216,7 @@ void serialize(R, S : Serializer)(auto ref R range, S ser) if (isInputRange!R &&
 }
 
 /// Serializes an associative array
-void serialize(AA, S : Serializer)(auto ref AA aa, S ser) if (isAssociativeArray!AA && !is(AA == enum)) {
+void serialize(AA)(auto ref AA aa, Serializer ser) if (isAssociativeArray!AA && !is(AA == enum)) {
     alias K = KeyType!AA;
     alias V = ValueType!AA;
     auto m = ser.start_map(aa.length);
@@ -228,7 +228,7 @@ void serialize(AA, S : Serializer)(auto ref AA aa, S ser) if (isAssociativeArray
 }
 
 /// Serializes an libphobos tuple
-void serialize(T, S : Serializer)(auto ref T tuple, S ser) if (isInstanceOf!(StdTuple, T)) {
+void serialize(T)(auto ref T tuple, Serializer ser) if (isInstanceOf!(StdTuple, T)) {
     alias Elements = T.Types;
     auto t = ser.start_tuple();
     static foreach (i, E; Elements) {
@@ -247,7 +247,7 @@ private enum isSpecialStructOrClass(T) = (
 
 /// Serializes structs and classes that are not already handled in special cases of `serialize`,
 /// have not already an member named `serialize` and are not marked with `Serde.UseUfcs`.
-void serialize(T, S : Serializer)(auto ref T val, S ser)
+void serialize(T)(auto ref T val, Serializer ser)
 if (
     (is(T == struct) || is(T == class))
     && !is(T == enum)
