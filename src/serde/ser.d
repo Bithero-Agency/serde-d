@@ -36,6 +36,7 @@ import std.conv : to;
 import std.container : SList, DList;
 import std.range.primitives : isInputRange, ElementType, hasLength;
 import std.typecons : StdTuple = Tuple;
+import ninox.std.traits : hasDerivedMember;
 
 import serde.attrs;
 import serde.common;
@@ -244,6 +245,16 @@ private enum isSpecialStructOrClass(T) = (
     || isInstanceOf!(DList, T)
     || isInstanceOf!(SList, T)
 );
+
+void serialize(T)(auto ref T value, Serializer der)
+if (
+    (is(T == struct) || is(T == class))
+    && !is(T == enum)
+    && !isSpecialStructOrClass!T
+    && hasDerivedMember!(T, "serializeInstance")
+) {
+    T.serializeInstance(value, der);
+}
 
 /// Serializes structs and classes that are not already handled in special cases of `serialize`,
 /// have not already an member named `serialize` and are not marked with `Serde.UseUfcs`.
