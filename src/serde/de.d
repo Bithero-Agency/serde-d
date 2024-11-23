@@ -42,7 +42,7 @@ import serde.common;
 import serde.error;
 import serde.value;
 
-abstract class Deserializer {
+interface Deserializer {
     void read_bool(ref bool b);
     void read_signed(ref long l, ubyte sz);
     void read_unsigned(ref ulong l, ubyte sz);
