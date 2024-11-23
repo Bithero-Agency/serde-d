@@ -29,8 +29,11 @@ public import serde.typetag.internal;
 
 /// Must be placed **inside** a baseclass or interface.
 /// 
-/// Base for all Typetag* templates; creates an `typetag_registry` static function for decendant
-/// types to register themselfs to via the `RegisterTypetag` template.
+/// Base for all Typetag* templates; creates:
+///  - an `typetag_registry` static function for decendant types to
+///    register themselfs to via the `RegisterTypetag` template,
+///  - defines a `typetag_name` member for decendants to expose their name and
+///  - defines `typetag_serialize`, which is used by the typetag format to call the serializer.
 template TypetagBase() {
     static auto ref typetag_registry() {
         import serde.de;
