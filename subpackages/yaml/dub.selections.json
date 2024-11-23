@@ -1,7 +1,7 @@
 {
 	"fileVersion": 1,
 	"versions": {
-		"ninox-d_std": "1.7.12",
+		"ninox-d_std": "1.7.13",
 		"serde-d": {"path":"../.."}
 	}
 }
