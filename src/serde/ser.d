@@ -40,7 +40,7 @@ import std.typecons : StdTuple = Tuple;
 import serde.attrs;
 import serde.common;
 
-abstract class Serializer {
+interface Serializer {
 
     /// Writes an boolean value.
     void write_bool(bool b);
