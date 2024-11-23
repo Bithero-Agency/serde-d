@@ -17,7 +17,7 @@
  */
 
 /**
- * Module to hold all code for the typetag feature of serde-d.
+ * Module to hold all code for the internal typetag format.
  * 
  * License:   $(HTTP https://www.gnu.org/licenses/agpl-3.0.html, AGPL 3.0).
  * Copyright: Copyright (C) 2024 Mai-Lapyst
