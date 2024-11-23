@@ -56,6 +56,60 @@ struct MyObj {
 
 > Note: for more infromation how to paragmatically use the serializer (including `serializeInstance`), see `documentation/types.md` and `documentation/serializers.md`.
 
+### Deserializing
+
+Really just the reverse of the serializing; the same things as before apply here, but with different names: The deserializer *should* be defined in `<package>.de`, named `<format>Deserializer`, and provide atleast the ufcs functions `T parse<format>(T)(...)` and `from<format>(T)(auto ref T value, ...)`. Like before, it is convention to re-export this module in the top-most module of your package.
+
+For example, when using `serde-d:json`, this is `serde.json.de.JsonDeserializer` and `parseJson` / `fromJson`:
+
+```d
+import std.stdio : writeln;
+import serde.json;
+
+struct MyObj {
+    int i = 12;
+}
+
+void main() {
+    assert( parseJson!MyObj(`{"i":12}`).i == 12 );
+
+    MyObj obj;
+    obj.fromJson(`{"i":12}`);
+    assert(obj.i == 12);
+}
+```
+
+> Note: This demonstrates why both an `parse*` and `from*` variant should be present: the `parse*` family is for completly parsing an instance, while the `from*` family is to parse *into* an existing instance.
+
+To overwrite this, each type can implement an `deserialize` method (optionally via ufcs, but for that you need to use `@(Serde.UseUfcs)`):
+
+```d
+import serde : Deserializer, AnyValue;
+
+struct MyObj {
+    int i = 12;
+
+    void deserialize(Deserializer ser) {
+        auto s = ser.read_struct();
+        AnyValue key;
+        while (s.read_key(field)) {
+            string field = key.get!string;
+            switch (field) {
+                case "i":
+                    this.i.deserialize(s.read_value());
+                    break;
+                default:
+                    s.ignore_value();
+                    break;
+            }
+        }
+        s.end();
+    }
+}
+```
+
+> Note: for more infromation how to paragmatically use the deserializer (including `deserializeInstance`), see `documentation/types.md` and `documentation/deserializers.md`.
+
 ### Attributes
 
 The package comes with an set of attributes, that can be used to tweak the default implementation of `serialize` and `deserialize` for strucs and classes. These live all in `serde.attrs`, but are re-exported in `serde` so you can just write `import serde;` and are good to go.
@@ -84,3 +138,11 @@ There are two ways of writing these attributes in your code: `Serde.Skip` and `S
 - `Raw`: marks an member to used "as-is". This means that the value of the member is directly copied into the output, if the format supports it. Members need to be of type string or have an returntype of an string for this to work. Formats that supports this are JSON and Yaml.
 
 - `Getter`: marks an member function to be used in serialization.
+
+- `Setter`: marks an member function to be used in deserialization.
+
+- `Alias`: specifies additional names for deserialization.
+
+- `Optional`: marks an member as being optional, which will prevent deserialization from failing if the member was not deserialized.
+
+- `DenyUnknownFields`: marks an struct or class to throw an error when encountering unknown fields in deserialization.
