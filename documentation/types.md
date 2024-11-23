@@ -2,12 +2,17 @@
 
 The framework works by defining an internal data schema that all types are converted into before makeing their way to the actual serializer. These types are:
 
-- "basic" scalar types, which need to match the `std.traits.isScalar` template. By default this should be:
-  - `bool`,
-  - `ubyte`, `ushort`, `uint`, `ulong`,
-  - `byte`, `short`, `int`, `long`,
-  - `float`, `double`, `real`,
-  - `char`, `wchar`, `dchar`
+- boolean type: `bool`
+
+- unsigned types: `ubyte`, `ushort`, `uint`, `ulong`
+
+- signed types: `byte`, `short`, `int`, `long`
+
+- floating-point types: `float`, `double`
+
+- the real type `real`
+
+- character types `char`, `wchar`, `dchar`
 
 - string types, which need to match the `std.traits.isSomeString` template, which gives you:
   - `const(char)[]` / `string`

@@ -46,9 +46,9 @@ import serde.ser : Serializer;
 struct MyObj {
     int i = 12;
 
-    void serialize(S : Serializer)(S ser) {
-        auto s = ser.start_struct!(typeof(this))();
-        s.write_field("j", this.i * 2);
+    void serialize(Serializer ser) {
+        auto s = ser.start_struct();
+        (this.i * 2).serialize( s.write_field("j") );
         s.end();
     }
 }
