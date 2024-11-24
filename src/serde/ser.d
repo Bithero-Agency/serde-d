@@ -139,10 +139,10 @@ pragma(inline) void serialize(T)(T value, Serializer ser) if (isScalarType!T && 
         ser.write_float(value, T.sizeof);
     }
     else static if (is(T == real)) {
-        ser.write_float(value);
+        ser.write_real(value);
     }
     else static if (is(T == bool)) {
-        ser.write_float(value);
+        ser.write_bool(value);
     }
     else static if (isSomeChar!T) {
         ser.write_char(cast(dchar) value);
