@@ -165,6 +165,38 @@ class YamlSerializer : Serializer {
         sink(cast(string) v.value);
     }
 
+    class Optional : Serializer.Optional {
+        Serializer write_some() {
+            return this.outer;
+        }
+
+        void write_none() {
+            this.outer.sink("null");
+        }
+
+        void end() {}
+    }
+    override Optional start_optional() {
+        return new Optional();
+    }
+
+    unittest {
+        import std.typecons : Nullable, nullable;
+        Nullable!int o;
+        assert(o.toYaml() == "null");
+        o = nullable(12);
+        assert(o.toYaml() == "12");
+    }
+
+    unittest {
+        import std.typecons : NullableRef, nullableRef;
+        NullableRef!int o;
+        assert(o.toYaml() == "null");
+        int i = 12;
+        o = nullableRef(&i);
+        assert(o.toYaml() == "12");
+    }
+
     override void write_enum(string name, ulong index) {
         write_string(name);
     }

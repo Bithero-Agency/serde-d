@@ -36,6 +36,7 @@ import std.conv : to;
 import std.container : SList, DList;
 import std.range.primitives : isInputRange, ElementType, hasLength;
 import std.typecons : StdTuple = Tuple;
+import std.typecons : Nullable, NullableRef;
 import ninox.std.traits : hasDerivedMember;
 
 import serde.attrs;
@@ -66,6 +67,21 @@ interface Serializer {
 
     /// Writes an raw value; internally used to support the `Serde.Raw` annotation.
     void write_raw(RawValue v);
+
+    /// Optionals are choice-types which either hold a value (some), or nothing (none).
+    interface Optional {
+        /// Writes the some
+        Serializer write_some();
+
+        /// Writes the none
+        void write_none();
+
+        /// Ends the optional.
+        void end();
+    }
+
+    /// Starts an optional.
+    Optional start_optional();
 
     /// Writes an enum value.
     void write_enum(string name, ulong index);
@@ -203,7 +219,7 @@ void serialize(T)(SList!T list, Serializer ser) {
 
 /// Serializes an input range;
 /// if the range also has an length attribute, it is taken into account.
-void serialize(R)(auto ref R range, Serializer ser) if (isInputRange!R && !isSomeString!R) {
+void serialize(R)(auto ref R range, Serializer ser) if (isInputRange!R && !isSomeString!R && !isInstanceOf!(Nullable, R)) {
     alias T = ElementType!R;
     static if (hasLength!R) {
         auto s = ser.start_seq(range.length);
@@ -238,12 +254,24 @@ void serialize(T)(auto ref T tuple, Serializer ser) if (isInstanceOf!(StdTuple, 
     t.end();
 }
 
+/// Serializes an libphobos optional / `Nullable!T` & `NullableRef!T`
+void serialize(T)(auto ref T nullable, Serializer ser) if (isInstanceOf!(Nullable, T) || isInstanceOf!(NullableRef, T)) {
+    auto opt = ser.start_optional();
+    if (nullable.isNull()) {
+        opt.write_none();
+    } else {
+        nullable.get().serialize(opt.write_some());
+    }
+    opt.end();
+}
+
 private enum isSpecialStructOrClass(T) = (
     isInstanceOf!(StdTuple, T)
     || isInputRange!T
     || is(T == RawValue)
     || isInstanceOf!(DList, T)
     || isInstanceOf!(SList, T)
+    || isInstanceOf!(NullableRef, T)
 );
 
 void serialize(T)(auto ref T value, Serializer der)

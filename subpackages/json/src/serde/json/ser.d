@@ -104,6 +104,38 @@ class JsonSerializer : Serializer {
         write(cast(string) v.value);
     }
 
+    class Optional : Serializer.Optional {
+        Serializer write_some() {
+            return this.outer;
+        }
+
+        void write_none() {
+            this.outer.write("null");
+        }
+
+        void end() {}
+    }
+    override Optional start_optional() {
+        return new Optional();
+    }
+
+    unittest {
+        import std.typecons : Nullable, nullable;
+        Nullable!int o;
+        assert(o.toJson() == "null");
+        o = nullable(12);
+        assert(o.toJson() == "12");
+    }
+
+    unittest {
+        import std.typecons : NullableRef, nullableRef;
+        NullableRef!int o;
+        assert(o.toJson() == "null");
+        int i = 12;
+        o = nullableRef(&i);
+        assert(o.toJson() == "12");
+    }
+
     override void write_enum(string name, ulong index) {
         write_string(name);
     }
