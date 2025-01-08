@@ -335,6 +335,33 @@ class JsonDeserializer : Deserializer {
         read_any(value);
     }
 
+    override Deserializer read_optional() {
+        if (this.buffer.startsWith("null")) {
+            this.buffer.popFrontExactly(4);
+            return null;
+        } else {
+            return this;
+        }
+    }
+
+    unittest {
+        Nullable!int o;
+        o.fromJson("12");
+        assert(o == 12);
+        o.fromJson("null");
+        assert(o.isNull() == true);
+    }
+
+    unittest {
+        import std.typecons : NullableRef;
+        int i;
+        NullableRef!int o = &i;
+        o.fromJson("12");
+        assert(o == 12 && i == 12);
+        o.fromJson("null");
+        assert(o.isNull() == true);
+    }
+
     class SeqAccess : Deserializer.SeqAccess {
         bool atStart = true;
 

@@ -34,7 +34,7 @@ import std.traits :
     isInstanceOf, TemplateArgsOf;
 import std.container : SList, DList;
 import std.typecons : StdTuple = Tuple;
-import std.typecons : Nullable;
+import std.typecons : Nullable, NullableRef;
 import ninox.std.traits : hasDerivedMember;
 
 import serde.attrs;
@@ -74,6 +74,10 @@ interface Deserializer {
 
     /// Reads any one value from the input.
     void read_any(ref AnyValue value);
+
+    /// Reads an optional by returning the deserializer to read the value / `some` from.
+    /// If a `none` is present instead, this method should return `null` instead.
+    Deserializer read_optional();
 
     interface SeqAccess {
         /// Size hint of the sequence (or tuple).
@@ -290,6 +294,23 @@ void deserialize(T)(ref T tuple, Deserializer de) if (isInstanceOf!(StdTuple, T)
     access.end();
 }
 
+/// Deserializes an libphobos optional / `Nullable!T` & `NullableRef!T`
+void deserialize(T)(ref T nullable, Deserializer de) if (isInstanceOf!(Nullable, T) || isInstanceOf!(NullableRef, T)) {
+    import std.traits : ReturnType, Unconst, fullyQualifiedName;
+    alias Inner = Unconst!(ReturnType!(T.get));
+    auto opt = de.read_optional();
+    if (opt) {
+        Inner inner;
+        inner.deserialize(opt);
+        static if (isInstanceOf!(NullableRef, T)) {
+            assert(!nullable.isNull(), "Cannot deserialize into null " ~ fullyQualifiedName!T);
+        }
+        nullable = inner;
+    } else {
+        nullable.nullify();
+    }
+}
+
 /// Deserializes an "any" value;
 /// This can be either an instance of libphobos `std.variant.VariantN`,
 /// or alternatively, one of `ninox.std.variant.Variant`.
@@ -303,6 +324,8 @@ private enum isSpecialStructOrClass(T) = (
     || isInstanceOf!(DList, T)
     || isInstanceOf!(SList, T)
     || isAnyValue!T
+    || isInstanceOf!(Nullable, T)
+    || isInstanceOf!(NullableRef, T)
 );
 
 void deserialize(T)(ref T value, Deserializer de)

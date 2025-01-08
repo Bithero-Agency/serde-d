@@ -80,6 +80,10 @@ class InternallyTaggedDeserializer : Deserializer {
         throw new SerdeException("Should not invoke read_enum on InternallyTaggedDeserializer!");
     }
 
+    override Deserializer read_optional() {
+        throw new SerdeException("Should not invoke read_optional on InternallyTaggedDeserializer!");
+    }
+
     override Deserializer.SeqAccess read_seq() {
         throw new SerdeException("Should not invoke read_seq on InternallyTaggedDeserializer!");
     }

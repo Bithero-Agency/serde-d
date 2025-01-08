@@ -800,6 +800,33 @@ class YamlDeserializer : Deserializer {
         }
     }
 
+    override Deserializer read_optional() {
+        if (this.buffer.startsWith("null")) {
+            this.buffer.popFrontExactly(4);
+            return null;
+        } else {
+            return this;
+        }
+    }
+
+    unittest {
+        Nullable!int o;
+        o.fromYaml("12");
+        assert(o == 12);
+        o.fromYaml("null");
+        assert(o.isNull() == true);
+    }
+
+    unittest {
+        import std.typecons : NullableRef;
+        int i;
+        NullableRef!int o = &i;
+        o.fromYaml("12");
+        assert(o == 12 && i == 12);
+        o.fromYaml("null");
+        assert(o.isNull() == true);
+    }
+
     class SeqAccess : Deserializer.SeqAccess {
         private {
             Context returnTo;
