@@ -106,6 +106,14 @@ class AnyValueDeserializer : Deserializer {
         value = this.val;
     }
 
+    override Deserializer read_optional() {
+        if (this.val.hasValue()) {
+            return this;
+        } else {
+            return null;
+        }
+    }
+
     class SeqAccess : Deserializer.SeqAccess {
         import std.typecons : Nullable;
 
