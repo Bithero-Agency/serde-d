@@ -44,6 +44,9 @@ import serde.common;
 
 interface Serializer {
 
+    /// Returns `true` if the output produced is human readable and `false` otherwise.
+    @property bool is_human_readable();
+
     /// Writes an boolean value.
     void write_bool(bool b);
 

@@ -91,6 +91,10 @@ class YamlSerializer : Serializer {
             sink(this._indent);
     }
 
+    override @property bool is_human_readable() {
+        return true;
+    }
+
     override void write_bool(bool value) {
         sink(value.to!string);
     }

@@ -66,6 +66,10 @@ class JsonSerializer : Serializer {
         this.sink([c]);
     }
 
+    override @property bool is_human_readable() {
+        return true;
+    }
+
     override void write_bool(bool value) {
         write(value.to!string);
     }
