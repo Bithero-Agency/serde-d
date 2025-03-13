@@ -184,7 +184,7 @@ pragma(inline) void serialize(T)(auto ref T str, Serializer ser) if (isSomeStrin
 }
 
 /// Serializes an string raw
-pragma(inline) void serialize()(ref RawValue value, Serializer ser) {
+pragma(inline) void serialize(RawValue value, Serializer ser) {
     ser.write_raw(value);
 }
 
