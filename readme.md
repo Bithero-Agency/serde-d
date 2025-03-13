@@ -131,6 +131,16 @@ There are two ways of writing these attributes in your code: `Serde.Skip` and `S
 
 - `Skip`: skips an member field in (de)serialization.
 
+- `SkipIf`: skips an member field in serialization only if any of the given functions return `true`.
+            Can be used multiple times.
+    ```d
+    struct Test {
+        /// This name is only serialized if the name is non-null AND not empty.
+        @SerdeSkipIf(a => (a is null || a.length < 1))
+        string name;
+    }
+    ```
+
 - `Rename`: renames an member for (de)serialization. It comes in two forms:
   - `Serde.Rename("a")` this form sets the name for both serialization as well as deserialization to `"a"` and is a shorthand of `Serde.Rename("a", "a")`.
   - `Serde.Rename("b", "c")` this form gives you control over the name for both serialization and deserialization independently (in exactly that order).
