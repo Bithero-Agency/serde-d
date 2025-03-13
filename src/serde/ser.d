@@ -319,6 +319,17 @@ if (
     import std.meta, std.traits;
     import ninox.std.traits;
 
+    template doSerialize(string expr, string ty) {
+        enum doSerialize = "auto fser = s.write_field(Serde.getNameFromItem!(elem.raw, elem.name, true));
+            static if (Serde.isRaw!(elem.raw)) {
+                static assert(isSomeString!(" ~ ty ~ "), \"@Serde.Raw can only be applied to fields with a string type.\");
+                RawValue(" ~ expr ~ ").serialize(fser);
+            }
+            else {
+                " ~ expr ~ ".serialize(fser);
+            }";
+    }
+
     enum isFieldOfInterest(alias Field) = (
         !Serde.isSkipped!(Field.raw)
         && !Serde.isSkipped!(Field.type)
@@ -327,14 +338,8 @@ if (
     alias fields = Filter!(isFieldOfInterest, GetFields!T);
     static foreach (f; fields) {
         {
-            auto fser = s.write_field(Serde.getNameFromItem!(f.raw, f.name, true));
-            static if (Serde.isRaw!(f.raw)) {
-                static assert(isSomeString!(f.type), "@Serde.Raw can only be applied to fields with a string type.");
-                RawValue(mixin("val." ~ f.name)).serialize(fser);
-            }
-            else {
-                mixin("val." ~ f.name).serialize(fser);
-            }
+            alias elem = f;
+            mixin(doSerialize!(`mixin("val." ~ f.name)`, `f.type`));
         }
     }
 
@@ -381,14 +386,8 @@ if (
     alias getters = staticMap!(correctProp, Filter!(isGetter, GetDerivedMembers!T));
     static foreach (m; getters) {
         {
-            auto fser = s.write_field(Serde.getNameFromItem!(m.raw, m.name, true));
-            static if (Serde.isRaw!(m.raw)) {
-                static assert(isSomeString!(ReturnType!(m.type)), "@Serde.Raw can only be applied to fields with a string type.");
-                RawValue(mixin("val." ~ m.name ~ "()")).serialize(fser);
-            }
-            else {
-                mixin("val." ~ m.name ~ "()").serialize(fser);
-            }
+            alias elem = m;
+            mixin(doSerialize!(`mixin("val." ~ m.name ~ "()")`, `ReturnType!(m.type)`));
         }
     }
 
