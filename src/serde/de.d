@@ -379,7 +379,7 @@ if (
             || (
                 isCallable!(Member.raw)
                 && hasFunctionAttributes!(Member.raw, "@property")
-                && Filter!(hasPropertySetter, Member.overloads).length == 1
+                && Parameters!(Member.raw).length == 1
             )
         )
     );
