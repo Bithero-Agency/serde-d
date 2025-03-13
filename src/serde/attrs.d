@@ -45,6 +45,37 @@ struct Serde {
     /// Checks if the given element `T` has the `Serde.Skip` attribute present.
     enum isSkipped(alias T) = hasUDA!(T, Skip);
 
+    /// Attribute to mark an member as to be skipped for serialization,
+    /// if any of the provided functions return `true`.
+    struct SkipIf(fun...)
+    if (fun.length >= 1)
+    {
+        pragma(inline)
+        static bool should_skip(T)(ref T instance) {
+            static foreach (f; fun) {
+                if (f(instance)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+    }
+
+    /// Checks if the given element `T` has one or more `Serde.SkipIf` attribute present.
+    enum canSkipConditionaly(alias T) = hasUDA!(T, SkipIf);
+
+    /// Checks if any of the `Serde.SkipIf` attributes present on `E` return `true` for the
+    /// given instance.
+    pragma(inline)
+    static bool isSkippedConditionaly(alias E, T)(ref T instance) {
+        static foreach (uda; getUDAs!(E, SkipIf)) {
+            if ((uda).should_skip(instance)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     /// Attribute to mark an member to be renamed.
     /// If given one string, it is used for both serialization and deserialization.
     /// 
@@ -162,6 +193,7 @@ struct Serde {
 
 alias SerdeUseUfcs = Serde.UseUfcs;
 alias SerdeSkip = Serde.Skip;
+alias SerdeSkipIf = Serde.SkipIf;
 alias SerdeRename = Serde.Rename;
 alias SerdeRaw = Serde.Raw;
 alias SerdeGetter = Serde.Getter;

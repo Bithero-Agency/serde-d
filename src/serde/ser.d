@@ -319,8 +319,8 @@ if (
     import std.meta, std.traits;
     import ninox.std.traits;
 
-    template doSerialize(string expr, string ty) {
-        enum doSerialize = "auto fser = s.write_field(Serde.getNameFromItem!(elem.raw, elem.name, true));
+    template doSerialize(alias elem, string expr, string ty) {
+        enum __inner = "auto fser = s.write_field(Serde.getNameFromItem!(elem.raw, elem.name, true));
             static if (Serde.isRaw!(elem.raw)) {
                 static assert(isSomeString!(" ~ ty ~ "), \"@Serde.Raw can only be applied to fields with a string type.\");
                 RawValue(" ~ expr ~ ").serialize(fser);
@@ -328,6 +328,12 @@ if (
             else {
                 " ~ expr ~ ".serialize(fser);
             }";
+
+        static if (Serde.canSkipConditionaly!(elem.raw)) {
+            enum doSerialize = "if (!Serde.isSkippedConditionaly!(elem.raw)(" ~ expr ~ ")) {\n" ~ __inner ~ "\n}";
+        } else {
+            enum doSerialize = __inner;
+        }
     }
 
     enum isFieldOfInterest(alias Field) = (
@@ -339,7 +345,7 @@ if (
     static foreach (f; fields) {
         {
             alias elem = f;
-            mixin(doSerialize!(`mixin("val." ~ f.name)`, `f.type`));
+            mixin(doSerialize!(f, `mixin("val." ~ f.name)`, `f.type`));
         }
     }
 
@@ -387,7 +393,8 @@ if (
     static foreach (m; getters) {
         {
             alias elem = m;
-            mixin(doSerialize!(`mixin("val." ~ m.name ~ "()")`, `ReturnType!(m.type)`));
+            auto __val = mixin("val." ~ m.name ~ "()");
+            mixin(doSerialize!(m, `__val`, `ReturnType!(m.type)`));
         }
     }
 
