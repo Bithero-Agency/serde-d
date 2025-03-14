@@ -414,7 +414,21 @@ if (
         enum name = Serde.getNameFromItem!(Field.raw, Field.name, false);
         enum index = i;
         alias type = Field.type;
-        enum code = "value." ~ Field.name ~ ".deserialize(val_de);";
+        static if (Serde.hasDeserializeWith!(Field.raw)) {
+            enum code = "alias __udas = getUDAs!(value." ~ Field.name ~ ", Serde.DeserializeWith);
+                static assert(__udas.length < 2, \"@Serde.DeserializeWith can only be applied once to an member.\");
+                __udas[0].fun(value." ~ Field.name ~ ", val_de);
+            ";
+        }
+        else static if (Serde.hasWith!(Field.raw)) {
+            enum code = "alias __udas = getUDAs!(value." ~ Field.name ~ ", Serde.With);
+                static assert(__udas.length < 2, \"@Serde.With can only be applied once to an member.\");
+                __udas[0].mod.deserialize(value." ~ Field.name ~ ", val_de);
+            ";
+        }
+        else {
+            enum code = "value." ~ Field.name ~ ".deserialize(val_de);";
+        }
         alias aliases = Serde.getAliases!(Field.raw);
         enum optional = Serde.isOptional!(Field.raw);
     }
@@ -422,8 +436,27 @@ if (
     {
         enum name = Serde.getNameFromItem!(Member.raw, Member.name, false);
         enum index = i + fields.length;
-        alias type = Parameters!(Member.type)[0];
-        enum code = BuildImportCodeForType!type ~ " __val; __val.deserialize(val_de); value." ~ Member.name ~ "(__val);";
+        alias type = Parameters!(Member.raw)[0];
+        pragma(msg, Member.name, " ", Serde.hasDeserializeWith!(Member.raw));
+        static if (Serde.hasDeserializeWith!(Member.raw)) {
+            enum code = BuildImportCodeForType!type ~ " __val;
+                alias __udas = getUDAs!(value." ~ Member.name ~ ", Serde.DeserializeWith);
+                static assert(__udas.length < 2, \"@Serde.DeserializeWith can only be applied once to an member.\");
+                __udas[0].fun(__val, val_de);
+                value." ~ Member.name ~ "(__val);
+            ";
+        }
+        else static if (Serde.hasWith!(Member.raw)) {
+            enum code = BuildImportCodeForType!type ~ " __val;
+                alias __udas = getUDAs!(value." ~ Member.name ~ ", Serde.With);
+                static assert(__udas.length < 2, \"@Serde.With can only be applied once to an member.\");
+                __udas[0].mod.deserialize(__val, val_de);
+                value." ~ Member.name ~ "(__val);
+            ";
+        }
+        else {
+            enum code = BuildImportCodeForType!type ~ " __val; __val.deserialize(val_de); value." ~ Member.name ~ "(__val);";
+        }
         alias aliases = Serde.getAliases!(Member.raw);
         enum optional = Serde.isOptional!(Member.raw);
     }

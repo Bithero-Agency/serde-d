@@ -325,6 +325,16 @@ if (
                 static assert(isSomeString!(" ~ ty ~ "), \"@Serde.Raw can only be applied to fields with a string type.\");
                 RawValue(" ~ expr ~ ").serialize(fser);
             }
+            else static if (Serde.hasSerializeWith!(elem.raw)) {
+                alias __udas = getUDAs!(elem.raw, Serde.SerializeWith);
+                static assert(__udas.length < 2, \"@Serde.SerializeWith can only be applied once to an member.\");
+                __udas[0].fun(" ~ expr ~ ", fser);
+            }
+            else static if (Serde.hasWith!(elem.raw)) {
+                alias __udas = getUDAs!(elem.raw, Serde.With);
+                static assert(__udas.length < 2, \"@Serde.With can only be applied once to an member.\");
+                __udas[0].mod.serialize(" ~ expr ~ ", fser);
+            }
             else {
                 " ~ expr ~ ".serialize(fser);
             }";

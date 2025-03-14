@@ -76,6 +76,45 @@ struct Serde {
         return false;
     }
 
+    /// Attribute to specify an module to use to look for a custom (de)serialization function.
+    /// 
+    /// The module must contain a `void serialize(ref T instance, Serializer ser)`
+    /// and a `void deserialize(ref T instance, Deserializer de)` function.
+    static struct With(alias m) {
+        static assert (
+            __traits(compiles, m.serialize) && __traits(compiles, m.deserialize),
+            "@Serde.With only accepts module that has a `serialize` and `deserialize` symbol."
+        );
+        alias mod = m;
+    }
+
+    /// Checks if the given element `T` has one or more `Serde.With` attribute present.
+    enum hasWith(alias T) = hasUDA!(T, With);
+
+    /// Attribute to specify an function for custom serialization.
+    /// This has higher prority than the `@Serde.With` attribute.
+    /// 
+    /// The provided function must match the following signature:
+    ///   `void serialize(ref T instance, Serializer ser)`.
+    static struct SerializeWith(alias f) {
+        alias fun = f;
+    }
+
+    /// Checks if the given element `T` has one or more `Serde.SerializeWith` attribute present.
+    enum hasSerializeWith(alias T) = hasUDA!(T, SerializeWith);
+
+    /// Attribute to specify an function for custom deserialization.
+    /// This has higher prority than the `@Serde.With` attribute.
+    /// 
+    /// The provided function must match the following signature:
+    ///   `void deserialize(ref T instance, Deserializer de)`.
+    static struct DeserializeWith(alias f) {
+        alias fun = f;
+    }
+
+    /// Checks if the given element `T` has one or more `Serde.DeserializeWith` attribute present.
+    enum hasDeserializeWith(alias T) = hasUDA!(T, DeserializeWith);
+
     /// Attribute to mark an member to be renamed.
     /// If given one string, it is used for both serialization and deserialization.
     /// 
@@ -194,6 +233,9 @@ struct Serde {
 alias SerdeUseUfcs = Serde.UseUfcs;
 alias SerdeSkip = Serde.Skip;
 alias SerdeSkipIf = Serde.SkipIf;
+alias SerdeWith = Serde.With;
+alias SerdeSerializeWith = Serde.SerializeWith;
+alias SerdeDeserializeWith = Serde.DeserializeWith;
 alias SerdeRename = Serde.Rename;
 alias SerdeRaw = Serde.Raw;
 alias SerdeGetter = Serde.Getter;
