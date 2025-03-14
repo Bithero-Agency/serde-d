@@ -346,19 +346,6 @@ if (
         }
     }
 
-    enum isFieldOfInterest(alias Field) = (
-        !Serde.isSkipped!(Field.raw)
-        && !Serde.isSkipped!(Field.type)
-        && Field.compiles
-    );
-    alias fields = Filter!(isFieldOfInterest, GetFields!T);
-    static foreach (f; fields) {
-        {
-            alias elem = f;
-            mixin(doSerialize!(f, `mixin("val." ~ f.name)`, `f.type`));
-        }
-    }
-
     enum hasPropertyGetter(alias overload) = (
         hasFunctionAttributes!(overload, "@property")
         && !is(ReturnType!overload == void)
@@ -367,6 +354,7 @@ if (
     enum isGetter(alias Member) = (
         Member.compiles
         && !Serde.isSkipped!(Member.raw)
+        && !Serde.isSkipped!(Member.type)
         && (
             (isFunction!(Member.raw) && Member.has_UDA!(Serde.Getter))
             || (
@@ -374,11 +362,12 @@ if (
                 && hasFunctionAttributes!(Member.raw, "@property")
                 && Filter!(hasPropertyGetter, Member.overloads).length == 1
             )
+            || !isFunction!(Member.raw)
         )
     );
     template correctProp(alias Member)
     {
-        static if(hasFunctionAttributes!(Member.raw, "@property")) {
+        static if(isCallable!(Member.raw) && hasFunctionAttributes!(Member.raw, "@property")) {
             alias overloads = __traits(getOverloads, T, Member.name);
             alias getter = AliasSeq!();
             static foreach (overload; overloads) {
@@ -399,12 +388,16 @@ if (
             alias correctProp = Member;
         }
     }
-    alias getters = staticMap!(correctProp, Filter!(isGetter, GetDerivedMembers!T));
-    static foreach (m; getters) {
+    alias members = staticMap!(correctProp, Filter!(isGetter, GetAllMembers!T));
+    static foreach (m; members) {
         {
             alias elem = m;
-            auto __val = mixin("val." ~ m.name ~ "()");
-            mixin(doSerialize!(m, `__val`, `ReturnType!(m.type)`));
+            static if (isCallable!(m.raw)) {
+                auto __val = mixin("val." ~ m.name ~ "()");
+                mixin(doSerialize!(m, `__val`, `ReturnType!(m.type)`));
+            } else {
+                mixin(doSerialize!(m, `mixin("val." ~ m.name)`, `m.type`));
+            }
         }
     }
 
