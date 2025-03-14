@@ -136,7 +136,7 @@ There are two ways of writing these attributes in your code: `Serde.Skip` and `S
     ```d
     struct Test {
         /// This name is only serialized if the name is non-null AND not empty.
-        @SerdeSkipIf(a => (a is null || a.length < 1))
+        @SerdeSkipIf!(a => (a is null || a.length < 1))
         string name;
     }
     ```
