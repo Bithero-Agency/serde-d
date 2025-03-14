@@ -141,6 +141,36 @@ There are two ways of writing these attributes in your code: `Serde.Skip` and `S
     }
     ```
 
+- `With`: specifies a module path to use as lookup for custom `serialize` and `deserialize` functions to use.
+    ```d
+    module my.custom.mod;
+    void serialize(ref string instance, Serializer ser) {}
+    void deserialize(ref string instance, Deserializer de) {}
+
+    module test;
+    struct Test {
+        /// Will be serialized with `my.custom.mod.serialize`,
+        /// and deserialized with `my.custom.mod.deserialize`.
+        @SerdeWith!(my.custom.mod)
+        string name;
+    }
+    ```
+
+- `SerializeWith`, `DeserializeWith`: Specifies custom functions for either serialization or deserialization.
+    These attributes have a *higher* priority than the `With` attribute.
+    ```d
+    module test;
+
+    void my_serialize(ref string instance, Serializer ser) {}
+    void my_deserialize(ref string instance, Deserializer de) {}
+
+    struct Test {
+        @SerdeWith!(test.my_serialize)
+        @SerdeWith!(test.my_deserialize)
+        string name;
+    }
+    ```
+
 - `Rename`: renames an member for (de)serialization. It comes in two forms:
   - `Serde.Rename("a")` this form sets the name for both serialization as well as deserialization to `"a"` and is a shorthand of `Serde.Rename("a", "a")`.
   - `Serde.Rename("b", "c")` this form gives you control over the name for both serialization and deserialization independently (in exactly that order).
