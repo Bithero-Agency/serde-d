@@ -360,12 +360,15 @@ if (
         return;
     }
 
-    enum isFieldOfInterest(alias Field) = (
-        !Serde.isSkipped!(Field.raw)
-        && !Serde.isSkipped!(Field.type)
-        && Field.compiles
+    alias allMembers = GetAllMembers!T;
+
+    enum isFieldOfInterest(alias Member) = (
+        Member.compiles
+        && !Serde.isSkipped!(Member.raw)
+        && !Serde.isSkipped!(Member.type)
+        && !isFunction!(Member.raw)
     );
-    alias fields = Filter!(isFieldOfInterest, GetFields!T);
+    alias fields = Filter!(isFieldOfInterest, allMembers);
 
     enum hasPropertySetter(alias overload) = (
         hasFunctionAttributes!(overload, "@property")
@@ -407,7 +410,7 @@ if (
             alias correctProp = Member;
         }
     }
-    alias setters = staticMap!(correctProp, Filter!(isSetter, GetDerivedMembers!T));
+    alias setters = staticMap!(correctProp, Filter!(isSetter, allMembers));
 
     template fieldToMember(size_t i, alias Field)
     {
